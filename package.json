@@ -1,0 +1,59 @@
+{
+  "name": "@mode7/zap",
+  "version": "0.1.0",
+  "description": "Lightweight gesture-first 2D game engine for interactive demos and playable ads",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "docs": "npx serve docs"
+  },
+  "keywords": [
+    "game-engine",
+    "canvas",
+    "2d",
+    "gestures",
+    "touch",
+    "playable-ads",
+    "interactive",
+    "lightweight",
+    "html5",
+    "typescript",
+    "animations",
+    "easing"
+  ],
+  "author": "Mode7 <hello@mode7.studio>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mode7/zap.git"
+  },
+  "homepage": "https://github.com/mode7/zap#readme",
+  "bugs": {
+    "url": "https://github.com/mode7/zap/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}
