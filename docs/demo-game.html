@@ -66,8 +66,8 @@
     const scoreText = new Text({
       text: 'SCORE: 0',
       x: 400,
-      y: 50,
-      fontSize: 32,
+      y: 40,
+      fontSize: 24,
       fontFamily: 'Arial, sans-serif',
       color: '#ffffff',
       align: 'center',
@@ -75,11 +75,24 @@
     });
     scene.add(scoreText);
 
+    // Create tagline text
+    const tagline = new Text({
+      text: 'Built with sprites and tweens using Zap',
+      x: 400,
+      y: 70,
+      fontSize: 14,
+      fontFamily: 'Arial, sans-serif',
+      color: '#9ca3af',
+      align: 'center',
+      baseline: 'middle'
+    });
+    scene.add(tagline);
+
     // Create combo text (hidden initially)
     const comboText = new Text({
       text: '',
       x: 400,
-      y: 90,
+      y: 100,
       fontSize: 20,
       fontFamily: 'Arial, sans-serif',
       color: '#fbbf24',
