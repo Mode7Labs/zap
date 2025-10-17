@@ -112,9 +112,52 @@
       flex-direction: column;
     }
 
-    #sandpack-container {
+    .editor-container {
       flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #3a3a3a;
+    }
+
+    .editor-panel {
+      background: #1e1e1e;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      background: #2a2a2a;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-bottom: 1px solid #3a3a3a;
+    }
+
+    #editor {
+      flex: 1;
+      overflow: auto;
+    }
+
+    #code-editor {
+      width: 100%;
+      height: 100%;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: none;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+    }
+
+    #preview {
+      flex: 1;
+      border: none;
+      background: #0f1419;
     }
 
     .ai-panel {
@@ -276,7 +319,18 @@
     </div>
 
     <div class="main">
-      <div id="sandpack-container"></div>
+      <div class="editor-container">
+        <div class="editor-panel">
+          <div class="panel-header">Code Editor</div>
+          <div id="editor">
+            <textarea id="code-editor" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="editor-panel">
+          <div class="panel-header">Live Preview</div>
+          <iframe id="preview"></iframe>
+        </div>
+      </div>
 
       <div class="ai-panel">
         <div class="ai-input-container">
@@ -317,16 +371,7 @@
     </div>
   </div>
 
-  <!-- React and Sandpack from CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@codesandbox/sandpack-react@2/dist/index.umd.production.min.js"></script>
-
   <script>
-    const { Sandpack } = window.SandpackReact;
-    const { createElement: h } = React;
-    const { createRoot } = ReactDOM;
-
     // Example code snippets
     const examples = {
       basic: `import { Game, Scene, Sprite } from 'https://esm.sh/@mode-7/zap@0.1.2';
@@ -462,7 +507,7 @@ scene.add(sprite);
 game.setScene(scene);
 game.start();`,
 
-      particles: `import { Game, Scene, Sprite, ParticleEmitter } from 'https://esm.sh/@mode-7/zap@0.1.2';
+      particles: `import { Game, Scene, ParticleEmitter } from 'https://esm.sh/@mode-7/zap@0.1.2';
 
 const game = new Game({
   width: 800,
@@ -572,50 +617,45 @@ game.setScene(scene);
 game.start();`
     };
 
-    let sandpackInstance = null;
     let currentCode = examples.basic;
+    const editor = document.getElementById('code-editor');
+    const preview = document.getElementById('preview');
 
-    // Initialize Sandpack
-    function initSandpack(code = examples.basic) {
-      const container = document.getElementById('sandpack-container');
-      const root = createRoot(container);
+    // Auto-update preview on code change
+    let updateTimeout;
+    editor.addEventListener('input', () => {
+      clearTimeout(updateTimeout);
+      updateTimeout = setTimeout(() => {
+        updatePreview();
+      }, 1000);
+    });
 
-      root.render(
-        h(Sandpack, {
-          template: 'vanilla',
-          files: {
-            '/index.js': code,
-            '/index.html': `<!DOCTYPE html>
+    // Update preview
+    function updatePreview() {
+      currentCode = editor.value;
+      const html = `<!DOCTYPE html>
 <html>
 <head>
   <style>
-    body { margin: 0; padding: 0; overflow: hidden; }
+    body { margin: 0; padding: 0; overflow: hidden; background: #0f1419; }
     #app { width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/index.js"></script>
+  <script type="module">
+${currentCode}
+  </script>
 </body>
-</html>`
-          },
-          options: {
-            showNavigator: false,
-            showTabs: false,
-            showLineNumbers: true,
-            editorHeight: '100%',
-            layout: 'preview'
-          },
-          theme: 'dark'
-        })
-      );
+</html>`;
 
-      currentCode = code;
+      preview.srcdoc = html;
     }
 
     // Load example
     function loadExample(name) {
-      initSandpack(examples[name]);
+      editor.value = examples[name];
+      updatePreview();
     }
 
     // Settings
@@ -716,7 +756,8 @@ Only output the JavaScript code, no explanations.`
           .replace(/```\n?/g, '')
           .trim();
 
-        initSandpack(generatedCode);
+        editor.value = generatedCode;
+        updatePreview();
         showStatus('Code generated successfully!', 'success');
         document.getElementById('ai-prompt').value = '';
 
@@ -750,7 +791,7 @@ Only output the JavaScript code, no explanations.`
     }
 
     // Initialize
-    initSandpack();
+    loadExample('basic');
     updateAIIndicator();
 
     // Close settings modal when clicking outside
