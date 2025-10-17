@@ -1,5 +1,5 @@
 {
-  "name": "@mode7/zap",
+  "name": "@mode-7/zap",
   "version": "0.1.0",
   "description": "Lightweight gesture-first 2D game engine for interactive demos and playable ads",
   "main": "./dist/index.js",

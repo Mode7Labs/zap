@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./assets/logo.png" alt="Zap Logo" width="180"/>
 
-  # @mode7/zap
+  # @mode-7/zap
 
   A **lightweight, gesture-first 2D game engine** for creating interactive demos and playable ads. Built with TypeScript, designed for simplicity and small bundle sizes.
 
@@ -25,13 +25,13 @@
 ## Installation
 
 ```bash
-npm install @mode7/zap
+npm install @mode-7/zap
 ```
 
 ## Quick Start
 
 ```typescript
-import { Game, Scene, Sprite } from '@mode7/zap';
+import { Game, Scene, Sprite } from '@mode-7/zap';
 
 // Create a game
 const game = new Game({
@@ -110,7 +110,7 @@ scene.onExit(); // Called when scene becomes inactive
 Base class for all game objects. Entities support transform hierarchy, tags, and events.
 
 ```typescript
-import { Entity } from '@mode7/zap';
+import { Entity } from '@mode-7/zap';
 
 const entity = new Entity({
   x: 100,
@@ -145,7 +145,7 @@ entity.containsPoint(x, y); // Check if point is inside entity
 Visual entity for rendering images or colored shapes.
 
 ```typescript
-import { Sprite } from '@mode7/zap';
+import { Sprite } from '@mode-7/zap';
 
 // Colored rectangle
 const rect = new Sprite({
@@ -181,7 +181,7 @@ await sprite.loadImage('path/to/image.png');
 Text rendering entity with Google Fonts support.
 
 ```typescript
-import { Text, loadGoogleFont } from '@mode7/zap';
+import { Text, loadGoogleFont } from '@mode-7/zap';
 
 // Load a Google Font first
 await loadGoogleFont('Poppins', [400, 700]);
@@ -198,7 +198,7 @@ const text = new Text({
 });
 
 // Load multiple fonts at once
-import { loadGoogleFonts } from '@mode7/zap';
+import { loadGoogleFonts } from '@mode-7/zap';
 
 await loadGoogleFonts([
   { family: 'Roboto', weights: [400, 700] },
@@ -323,7 +323,7 @@ entity.tween(
 Add visual polish with particles.
 
 ```typescript
-import { ParticleEmitter } from '@mode7/zap';
+import { ParticleEmitter } from '@mode-7/zap';
 
 const emitter = new ParticleEmitter({
   x: 400,
@@ -349,7 +349,7 @@ emitter.burst(50);
 Utilities for positioning entities.
 
 ```typescript
-import { Layout } from '@mode7/zap';
+import { Layout } from '@mode-7/zap';
 
 // Grid layout
 Layout.layoutGrid(entities, {
@@ -378,7 +378,7 @@ Layout.center(entity, game.width, game.height);
 ### Utility Functions
 
 ```typescript
-import { Layout } from '@mode7/zap';
+import { Layout } from '@mode-7/zap';
 
 // Math utilities
 Layout.clamp(value, min, max);
@@ -427,7 +427,7 @@ entity.overlaps(other);   // Same as intersects
 Simple asset loading and caching.
 
 ```typescript
-import { assetLoader } from '@mode7/zap';
+import { assetLoader } from '@mode-7/zap';
 
 // Load single image (supports remote URLs)
 await assetLoader.loadImage('player', 'https://example.com/player.png');
@@ -483,7 +483,7 @@ Zap is designed to be lightweight:
 Zap is written in TypeScript and includes full type definitions. No need for `@types` packages!
 
 ```typescript
-import type { GameOptions, Entity, GestureEvent } from '@mode7/zap';
+import type { GameOptions, Entity, GestureEvent } from '@mode-7/zap';
 ```
 
 ## License
