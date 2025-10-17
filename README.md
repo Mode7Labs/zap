@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://files.reimage.dev/reimage/bbdc36e9ed1e/original.png" alt="Zap Logo" width="180"/>
+  <img src="./assets/logo.png" alt="Zap Logo" width="180"/>
 
   # @mode7/zap
 
