@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/logo.png" alt="Zap Logo" width="180"/>
+  <img src="https://raw.githubusercontent.com/Mode7Labs/zap/main/assets/logo.png" alt="Zap Logo" width="180"/>
 
   # @mode-7/zap
 
