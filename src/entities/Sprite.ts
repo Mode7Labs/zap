@@ -50,12 +50,25 @@ export class Sprite extends Entity {
     const offsetY = -this.height * this.anchorY;
 
     if (this.image) {
-      // Draw image
-      ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+      // Draw image with optional circular clipping
+      if (this.radius > 0 && this.isCircle()) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+        ctx.restore();
+      } else {
+        ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+      }
     } else if (this.color) {
       ctx.fillStyle = this.color;
 
-      if (this.radius > 0) {
+      if (this.radius > 0 && this.isCircle()) {
+        // Draw circle
+        this.drawCircle(ctx);
+      } else if (this.radius > 0) {
         // Draw rounded rectangle
         this.drawRoundedRect(ctx, offsetX, offsetY, this.width, this.height, this.radius);
       } else {
@@ -63,6 +76,23 @@ export class Sprite extends Entity {
         ctx.fillRect(offsetX, offsetY, this.width, this.height);
       }
     }
+  }
+
+  /**
+   * Check if this sprite should be rendered as a circle
+   */
+  private isCircle(): boolean {
+    return this.width === this.height && this.radius * 2 === this.width;
+  }
+
+  /**
+   * Draw a circle
+   */
+  private drawCircle(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
   }
 
   /**

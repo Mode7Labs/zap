@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zap Test Playable Ad</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #instructions {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="instructions">Tap the cards!</div>
+  </div>
+
+  <script type="module">
+    // Import Zap from NPM via esm.sh CDN
+    import { Game, Scene, Sprite, Layout } from 'https://esm.sh/@mode-7/zap@0.1.1';
+
+    // Create game
+    const game = new Game({
+      width: 800,
+      height: 600,
+      backgroundColor: '#0f3460',
+      parent: '#game-container',
+      showFPS: true
+    });
+
+    // Create scene
+    const scene = new Scene();
+
+    // Card colors
+    const colors = ['#e94560', '#f4a261', '#2a9d8f', '#e76f51', '#264653'];
+
+    // Create 5 interactive cards
+    const cards = [];
+    for (let i = 0; i < 5; i++) {
+      const card = new Sprite({
+        width: 120,
+        height: 160,
+        color: colors[i],
+        radius: 12,
+        interactive: true,
+      });
+
+      // Add tap interaction
+      card.on('tap', () => {
+        // Animate on tap
+        card.tween(
+          {
+            rotation: Math.PI * 2,
+            scaleX: 1.3,
+            scaleY: 1.3
+          },
+          {
+            duration: 400,
+            easing: 'easeOutBack'
+          }
+        );
+
+        // Reset after animation
+        setTimeout(() => {
+          card.tween(
+            {
+              rotation: 0,
+              scaleX: 1,
+              scaleY: 1
+            },
+            {
+              duration: 300,
+              easing: 'easeInOutQuad'
+            }
+          );
+        }, 400);
+      });
+
+      // Add swipe interaction
+      card.on('swipe', (event) => {
+        const offscreenY = event.direction === 'up' ? -200 : 800;
+
+        card.tween(
+          {
+            y: offscreenY,
+            rotation: Math.PI * (event.direction === 'up' ? -1 : 1),
+            alpha: 0
+          },
+          {
+            duration: 500,
+            easing: 'easeInBack',
+            onComplete: () => {
+              // Reset position
+              card.y = 300;
+              card.rotation = 0;
+              card.alpha = 1;
+            }
+          }
+        );
+      });
+
+      cards.push(card);
+      scene.add(card);
+    }
+
+    // Layout cards in a row
+    Layout.layoutRow(cards, 100, 300, 30);
+
+    // Add floating animation to cards
+    cards.forEach((card, index) => {
+      const animate = () => {
+        const delay = index * 100;
+        const offset = 20;
+
+        setTimeout(() => {
+          card.tween(
+            { y: card.y - offset },
+            {
+              duration: 1000 + Math.random() * 500,
+              easing: 'easeInOutSine',
+              onComplete: () => {
+                card.tween(
+                  { y: card.y + offset },
+                  {
+                    duration: 1000 + Math.random() * 500,
+                    easing: 'easeInOutSine',
+                    onComplete: animate
+                  }
+                );
+              }
+            }
+          );
+        }, delay);
+      };
+
+      animate();
+    });
+
+    // Set scene and start
+    game.setScene(scene);
+    game.start();
+
+    // Hide instructions after 3 seconds
+    setTimeout(() => {
+      const instructions = document.getElementById('instructions');
+      instructions.style.transition = 'opacity 0.5s';
+      instructions.style.opacity = '0';
+    }, 3000);
+  </script>
+</body>
+</html>
