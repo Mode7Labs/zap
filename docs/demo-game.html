@@ -88,11 +88,24 @@
     });
     scene.add(tagline);
 
+    // Create engine credit
+    const engineCredit = new Text({
+      text: 'Built with the ⚡ Zap engine',
+      x: 400,
+      y: 90,
+      fontSize: 12,
+      fontFamily: 'Arial, sans-serif',
+      color: '#6b7280',
+      align: 'center',
+      baseline: 'middle'
+    });
+    scene.add(engineCredit);
+
     // Create combo text (hidden initially)
     const comboText = new Text({
       text: '',
       x: 400,
-      y: 100,
+      y: 115,
       fontSize: 20,
       fontFamily: 'Arial, sans-serif',
       color: '#fbbf24',
