@@ -10,32 +10,32 @@ GitHub Pages doesn't serve raw `.md` files directly. Attempting to fetch markdow
 
 We provide **two methods** for AI assistants to access documentation:
 
-### Method 1: Complete Documentation JSON (Recommended)
+### Method 1: Documentation Index JSON (Recommended)
 
-Fetch all documentation in a single request:
+Fetch a lightweight index that tells you where to find each doc:
 
 ```
 https://mode7labs.github.io/zap/docs/api-docs.json
 ```
 
 This JSON file contains:
-- All 31 markdown documentation files
-- Full content for each file
+- Index of all 31 markdown documentation files
 - Metadata (title, description)
-- GitHub raw URLs for individual files
+- Direct URLs to fetch each doc
 - Organized by category
+- Only 9.5KB - fast to fetch
 
 **Advantages:**
-- Single HTTP request for all docs
+- Lightweight index (9.5KB)
 - No authentication issues
-- Fast and efficient
-- Includes full markdown content
+- Browse available docs before fetching
+- Fetch only the docs you need
 
 **Structure:**
 ```json
 {
   "version": "0.1.3",
-  "generated": "2025-10-19T07:25:11.972Z",
+  "generated": "2025-10-19T07:28:39.699Z",
   "categories": {
     "getting-started": [
       {
@@ -43,8 +43,7 @@ This JSON file contains:
         "title": "Installation",
         "description": "Install Zap via npm or CDN",
         "path": "getting-started/installation.md",
-        "githubRawUrl": "https://raw.githubusercontent.com/...",
-        "content": "full markdown content here..."
+        "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/getting-started/installation.md"
       }
     ],
     "core": [...],
@@ -118,20 +117,26 @@ Documentation is organized into 10 categories:
 ## Example AI Usage
 
 ```javascript
-// Fetch all docs
-const response = await fetch('https://mode7labs.github.io/zap/docs/api-docs.json');
-const docs = await response.json();
+// Step 1: Fetch the index
+const indexResponse = await fetch('https://mode7labs.github.io/zap/docs/api-docs.json');
+const index = await indexResponse.json();
 
-// Find specific documentation
-const gesturesDocs = docs.categories.gestures;
-const dragDoc = gesturesDocs.find(doc => doc.slug === 'gestures/drag');
+// Step 2: Browse available docs
+console.log(index.categories); // All categories
+console.log(index.categories.gestures); // All gesture docs
 
-console.log(dragDoc.title);  // "Drag Gesture"
-console.log(dragDoc.content); // Full markdown content
+// Step 3: Find the doc you need
+const dragDoc = index.categories.gestures.find(doc => doc.slug === 'gestures/drag');
+console.log(dragDoc.title);        // "Drag Gesture"
+console.log(dragDoc.description);  // "Dragging and moving interactive entities"
+console.log(dragDoc.url);          // URL to fetch full content
 
-// Or fetch a specific file directly
-const dragMd = await fetch('https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/gestures/drag.md');
-const dragContent = await dragMd.text();
+// Step 4: Fetch the full markdown content
+const contentResponse = await fetch(dragDoc.url);
+const fullMarkdown = await contentResponse.text();
+
+// Now you have the complete documentation
+console.log(fullMarkdown);
 ```
 
 ## Important Notes

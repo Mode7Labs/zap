@@ -76,8 +76,7 @@ function buildDocsIndex() {
       title: metadata.title || path.basename(relativePath, '.md'),
       description: metadata.description || '',
       path: relativePath.replace(/\\/g, '/'),
-      githubRawUrl: `${GITHUB_RAW_BASE}/${relativePath.replace(/\\/g, '/')}`,
-      content: body.trim()
+      url: `${GITHUB_RAW_BASE}/${relativePath.replace(/\\/g, '/')}`
     });
   });
 
