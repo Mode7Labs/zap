@@ -153,14 +153,44 @@ const enemies = scene.getEntitiesByTag('enemy');
 Create parent-child relationships:
 
 ```javascript
-const parent = new Sprite({ x: 100, y: 100 });
-const child = new Sprite({ x: 50, y: 0 });
+const parent = new Sprite({
+  x: 100,
+  y: 100,
+  width: 100,   // Dimensions needed for interactive containers
+  height: 100
+});
+
+const child = new Sprite({
+  x: 50,
+  y: 0,
+  width: 30,
+  height: 30,
+  color: '#4fc3f7'
+});
 
 parent.addChild(child);
 
 // Child transforms relative to parent
 parent.rotation = Math.PI / 4;  // Child rotates too
 parent.x = 200;                  // Child moves too
+```
+
+**IMPORTANT**: If the parent sprite is `interactive: true`, it **must have `width` and `height`** specified. Without dimensions, gesture detection won't work because there's no hit area to detect touches.
+
+```javascript
+// ❌ WRONG - Interactive container without dimensions
+const cardGroup = new Sprite({
+  x: 200, y: 150,
+  interactive: true  // Won't work without width/height!
+});
+
+// ✅ CORRECT - Interactive container with dimensions
+const cardGroup = new Sprite({
+  x: 200, y: 150,
+  width: 300,   // Must specify for gestures to work
+  height: 400,
+  interactive: true
+});
 ```
 
 Remove children:

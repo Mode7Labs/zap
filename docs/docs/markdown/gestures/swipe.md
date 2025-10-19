@@ -440,6 +440,7 @@ game.on('swipe', (event) => {
 
 ## Tips
 
+- **Must have dimensions** - `width` and `height` are REQUIRED for gesture detection. Without dimensions, there's no hit area and swipes won't work!
 - **Swipes are quick** - They end immediately, unlike drag which is continuous
 - **Check direction** - Handle each direction separately for clarity
 - **Use velocity** - Faster swipes can trigger different actions
@@ -447,6 +448,29 @@ game.on('swipe', (event) => {
 - **Test swipe threshold** - The default 30px works well for most cases
 
 ## Common Mistakes
+
+### Missing width and height
+
+```javascript
+// ❌ CRITICAL ERROR - No hit area, swipe won't work!
+const card = new Sprite({
+  x: 200,
+  y: 150,
+  interactive: true  // Useless without dimensions
+});
+// Swipe events will NEVER fire!
+
+// ✅ CORRECT - Must have dimensions for hit detection
+const card = new Sprite({
+  x: 200,
+  y: 150,
+  width: 300,   // Required!
+  height: 400,  // Required!
+  interactive: true
+});
+```
+
+**This is the #1 mistake!** Interactive sprites MUST have `width` and `height`. Without dimensions, gesture detection has no bounding box to test against.
 
 ### Confusing swipe with drag
 

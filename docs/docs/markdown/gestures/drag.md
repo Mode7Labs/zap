@@ -484,12 +484,36 @@ game.on('dragend', (event) => {
 ## Tips
 
 - **Always set `interactive: true`** on draggable entities
+- **Must have dimensions** - `width` and `height` are REQUIRED for gesture detection. Without dimensions, there's no hit area and gestures won't work!
 - **Provide visual feedback** - Change alpha, scale, or color during drag
 - **Constrain movement** - Prevent dragging off-screen or into invalid areas
 - **Use dragend for snapping** - Snap to grid, drop zones, or final positions
 - **Test on mobile** - Drag works seamlessly on both mouse and touch
 
 ## Common Mistakes
+
+### Missing width and height
+
+```javascript
+// ❌ CRITICAL ERROR - No hit area, drag won't work!
+const sprite = new Sprite({
+  x: 200,
+  y: 150,
+  interactive: true  // Useless without dimensions
+});
+// Drag events will NEVER fire!
+
+// ✅ CORRECT - Must have dimensions for hit detection
+const sprite = new Sprite({
+  x: 200,
+  y: 150,
+  width: 100,   // Required!
+  height: 100,  // Required!
+  interactive: true
+});
+```
+
+**This is the #1 mistake!** Interactive sprites MUST have `width` and `height`. Without dimensions, gesture detection has no bounding box to test against, so all touch/mouse events pass through.
 
 ### Not applying delta correctly
 

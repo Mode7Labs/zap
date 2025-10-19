@@ -353,12 +353,36 @@ sprite.interactive = true;   // Re-enable taps
 ## Tips
 
 - **Always set `interactive: true`** on entities you want to be tappable
+- **Must have dimensions** - `width` and `height` are REQUIRED for tap detection. Without dimensions, there's no hit area and taps won't work!
 - **Provide visual feedback** - Users expect immediate response
 - **Use easing functions** - `easeOutBack` and `easeOutQuad` feel great for buttons
 - **Keep tap areas large** - Minimum 44x44 pixels for touch-friendly targets
 - **Test on mobile** - Taps work on both mouse and touch devices
 
 ## Common Mistakes
+
+### Missing width and height
+
+```javascript
+// ❌ CRITICAL ERROR - No hit area, tap won't work!
+const sprite = new Sprite({
+  x: 100,
+  y: 100,
+  interactive: true  // Useless without dimensions
+});
+// Tap events will NEVER fire!
+
+// ✅ CORRECT - Must have dimensions for hit detection
+const sprite = new Sprite({
+  x: 100,
+  y: 100,
+  width: 80,    // Required!
+  height: 80,   // Required!
+  interactive: true
+});
+```
+
+**This is the #1 mistake!** Interactive sprites MUST have `width` and `height`. Without dimensions, gesture detection has no bounding box to test against, so all touch/mouse events pass through.
 
 ### Forgetting interactive flag
 
