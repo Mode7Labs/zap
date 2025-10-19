@@ -19,11 +19,11 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "build:docs": "npm run build && rm -rf web/dist && cp -r dist web/dist",
+    "build:docs": "npm run build && rm -rf docs/dist && cp -r dist docs/dist",
     "dev": "tsup src/index.ts --format esm --watch",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "docs": "npx serve web"
+    "docs": "npx serve docs"
   },
   "keywords": [
     "game-engine",
