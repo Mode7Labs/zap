@@ -11,16 +11,22 @@
 ## Features
 
 - **Gesture-First Design** - Built-in tap, swipe, drag, and long-press recognition
-- **Smooth Animations** - Powerful tweening system with 30+ easing functions
-- **Image Support** - Load remote images, sprite sheets, with CORS support
+- **Smooth Animations** - Powerful tweening system with 37 easing functions
+- **Image Support** - Load remote images with automatic sizing and CORS support
 - **Google Fonts Integration** - Dynamically load any Google Font
-- **Collision Detection** - Built-in position and overlap detection for match-3 games
-- **Lightweight** - Zero dependencies, tree-shakeable, minimal bundle size
-- **TypeScript Native** - Full type safety and IntelliSense support
-- **Scene Management** - Easy scene transitions and entity hierarchy
-- **Particle Effects** - Simple particle system for visual polish
+- **Collision Detection** - Automatic AABB collision system with events
+- **Audio System** - Sound effects and music with volume control
+- **Camera Controls** - Follow entities, zoom, and shake effects
+- **Responsive Design** - Automatic canvas scaling for any screen size
+- **Scene Management** - Scene transitions, backgrounds, and lifecycle hooks
+- **Particle Effects** - Emitters and burst particles for visual polish
+- **UI Components** - Button, NinePatch panels, touch trails
 - **Layout Helpers** - Grid, circle, row/column positioning utilities
-- **Asset Loading** - Simple image loading and caching
+- **Timer Utilities** - Delay and interval with automatic cleanup
+- **Storage API** - LocalStorage wrapper for saving game data
+- **Math Utilities** - clamp, lerp, random, distance, angle calculations
+- **Lightweight** - Zero dependencies, tree-shakeable, ~15KB minified + gzipped
+- **TypeScript Native** - Full type safety and IntelliSense support
 
 ## Installation
 
@@ -80,8 +86,10 @@ const game = new Game({
   height: 600,
   backgroundColor: '#000000',
   parent: '#game-container', // Optional: selector or element
+  responsive: true, // Optional: auto-scale to fit screen
   pixelRatio: 2, // Optional: defaults to window.devicePixelRatio
   antialias: true, // Optional: defaults to true
+  enableTouchTrail: true, // Optional: visual touch/mouse trail
 });
 
 game.start(); // Start the game loop
@@ -94,15 +102,19 @@ game.setScene(scene); // Switch to a different scene
 Scenes contain and manage entities. Use scenes for different game states (menu, gameplay, game over).
 
 ```typescript
-const scene = new Scene();
+const scene = new Scene({
+  backgroundColor: '#0f3460', // Optional: solid background color
+  backgroundImage: 'bg.png', // Optional: image background
+});
 
 scene.add(entity); // Add an entity
 scene.remove(entity); // Remove an entity
 scene.getEntities(); // Get all entities
 scene.getEntitiesByTag('enemy'); // Get entities by tag
 
-scene.onEnter(); // Called when scene becomes active
-scene.onExit(); // Called when scene becomes inactive
+// Lifecycle hooks
+scene.on('enter', () => console.log('Scene entered'));
+scene.on('exit', () => console.log('Scene exited'));
 ```
 
 ### Entities
@@ -393,33 +405,44 @@ Layout.randomItem(array);
 
 ## Collision Detection
 
-Built-in methods for entity position and collision detection - perfect for match-3 games!
+Automatic AABB collision system with events - perfect for games!
 
 ```typescript
-// Check if entities overlap
-if (gem1.intersects(gem2)) {
-  console.log('Match detected!');
-  matchGems(gem1, gem2);
+// Enable collision detection on an entity
+const player = new Sprite({
+  x: 100, y: 100,
+  width: 50, height: 50,
+  checkCollisions: true, // Enable automatic collision checking
+  collisionTags: ['enemy', 'coin'], // Only collide with these tags
+});
+
+// Listen for collision events
+player.on('collisionenter', (event) => {
+  console.log('Hit:', event.other);
+  if (event.other.hasTag('coin')) {
+    score += 10;
+    event.other.destroy();
+  }
+});
+
+player.on('collide', (event) => {
+  // Fires every frame while colliding
+  console.log('Still colliding with:', event.other);
+});
+
+player.on('collisionexit', (event) => {
+  console.log('Stopped colliding with:', event.other);
+});
+
+// Manual collision checks
+if (entity1.intersects(entity2)) {
+  console.log('Entities overlap');
 }
 
-// Check relative positions
-if (gem1.isAbove(gem2)) {
-  console.log('Gem 1 is above gem 2');
-}
-
-// Get distance between entities
-const distance = entity1.distanceTo(entity2);
-
-// Get bounding box
-const bounds = entity.getBounds();
-// Returns: { left, right, top, bottom }
-
-// Position checks
-entity.isAbove(other);    // Lower Y position
-entity.isBelow(other);    // Higher Y position
-entity.isLeftOf(other);   // Lower X position
-entity.isRightOf(other);  // Higher X position
-entity.overlaps(other);   // Same as intersects
+// Utility methods
+entity.distanceTo(other);     // Distance between entities
+entity.getBounds();           // { left, right, top, bottom }
+entity.containsPoint(x, y);   // Check if point is inside
 ```
 
 ## Asset Loading
@@ -450,14 +473,123 @@ const sprite = new Sprite({
 });
 ```
 
+## Audio
+
+Play sound effects and music with the built-in audio system.
+
+```typescript
+import { audioManager } from '@mode-7/zap';
+
+// Play a sound effect
+audioManager.playSound('coin', 'assets/coin.mp3');
+
+// Play background music (loops automatically)
+audioManager.playMusic('assets/music.mp3');
+
+// Control volume (0-1)
+audioManager.setMusicVolume(0.5);
+audioManager.setSoundVolume(0.8);
+
+// Mute/unmute
+audioManager.muteMusic();
+audioManager.unmuteMusic();
+audioManager.muteSound();
+audioManager.unmuteSound();
+
+// Stop music
+audioManager.stopMusic();
+```
+
+## Camera
+
+Camera controls for following entities, zooming, and screen shake effects.
+
+```typescript
+import { Camera } from '@mode-7/zap';
+
+const camera = new Camera(game.width, game.height);
+
+// Follow an entity
+camera.follow(player);
+
+// Zoom
+camera.zoom = 2.0; // 2x zoom
+camera.zoom = 0.5; // Zoom out
+
+// Screen shake
+camera.shake(300, 10); // duration 300ms, intensity 10
+
+// Manual positioning
+camera.x = 100;
+camera.y = 100;
+```
+
+## Timers
+
+Delay and interval utilities with automatic cleanup.
+
+```typescript
+import { delay, interval, wait } from '@mode-7/zap';
+
+// Delay execution
+delay(1000, () => {
+  console.log('1 second later');
+});
+
+// Repeat every interval
+const timer = interval(100, () => {
+  console.log('Every 100ms');
+});
+
+// Stop interval
+timer.cancel();
+
+// Wait (returns promise)
+await wait(2000);
+console.log('2 seconds later');
+```
+
+## Storage
+
+LocalStorage wrapper for saving game data.
+
+```typescript
+import { Storage } from '@mode-7/zap';
+
+const storage = new Storage('my-game'); // Prefix for keys
+
+// Save data
+storage.set('highScore', 1000);
+storage.set('playerName', 'Alice');
+storage.set('settings', { music: true, sound: false });
+
+// Load data
+const highScore = storage.get('highScore', 0); // Default value: 0
+const settings = storage.get('settings', {});
+
+// Check if key exists
+if (storage.has('playerName')) {
+  console.log('Player name saved');
+}
+
+// Remove data
+storage.remove('highScore');
+
+// Clear all
+storage.clear();
+```
+
 ## Documentation & Examples
 
-Check out the [**Interactive Documentation**](https://github.com/mode7/zap/tree/main/docs) with live, runnable examples:
+Visit the [**Interactive Documentation**](https://mode7labs.github.io/zap/) with runnable examples:
 
-- Complete API documentation
-- 20+ interactive examples
-- Code snippets for every feature
-- Copy-paste ready demos
+- 📚 Complete API documentation
+- ⚡ 31 interactive guides with code examples
+- 🎮 Live playground with AI-powered code generation
+- 📖 Searchable documentation index
+- 💡 Copy-paste ready code snippets
+
+**For AI Assistants:** Documentation index at `https://mode7labs.github.io/zap/docs/api-docs.json`
 
 Run locally:
 ```bash

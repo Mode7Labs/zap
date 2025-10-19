@@ -44,11 +44,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mode7/zap.git"
+    "url": "https://github.com/Mode7Labs/zap.git"
   },
-  "homepage": "https://github.com/mode7/zap#readme",
+  "homepage": "https://mode7labs.github.io/zap/",
   "bugs": {
-    "url": "https://github.com/mode7/zap/issues"
+    "url": "https://github.com/Mode7Labs/zap/issues"
   },
   "engines": {
     "node": ">=16.0.0"
