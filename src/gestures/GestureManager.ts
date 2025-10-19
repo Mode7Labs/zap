@@ -11,6 +11,11 @@ interface PointerState {
   isDown: boolean;
 }
 
+interface PinchState {
+  startDistance: number;
+  target: Entity | null;
+}
+
 /**
  * Gesture recognition and handling system
  */
@@ -24,6 +29,9 @@ export class GestureManager {
   private tapMaxDuration: number = 300; // ms
 
   private currentDragTarget: Entity | null = null;
+  private currentHoverTarget: Entity | null = null;
+  private lastPointerPosition: Point | null = null;
+  private pinchState: PinchState | null = null;
 
   constructor(game: Game) {
     this.game = game;
@@ -99,12 +107,74 @@ export class GestureManager {
     return null;
   }
 
+  private updateHoverTarget(pos: Point, forcedTarget?: Entity | null): void {
+    const target = forcedTarget !== undefined ? forcedTarget : this.findEntityAtPosition(pos);
+
+    if (target === this.currentHoverTarget) {
+      return;
+    }
+
+    if (this.currentHoverTarget) {
+      const previous = this.currentHoverTarget;
+      const outEvent = {
+        type: 'pointerout' as const,
+        position: pos,
+        target: previous,
+      } satisfies GestureEvent;
+      previous.emit('pointerout', outEvent);
+      this.game.emit('pointerout', outEvent);
+    }
+
+    if (target) {
+      const overEvent = {
+        type: 'pointerover' as const,
+        position: pos,
+        target,
+      } satisfies GestureEvent;
+      target.emit('pointerover', overEvent);
+      this.game.emit('pointerover', overEvent);
+    }
+
+    this.currentHoverTarget = target ?? null;
+  }
+
+  private clearHover(): void {
+    if (!this.currentHoverTarget) return;
+    const position = this.lastPointerPosition ?? this.currentHoverTarget.getWorldPosition();
+    const event = {
+      type: 'pointerout' as const,
+      position,
+      target: this.currentHoverTarget,
+    } satisfies GestureEvent;
+    this.currentHoverTarget.emit('pointerout', event);
+    this.game.emit('pointerout', event);
+    this.currentHoverTarget = null;
+  }
+
+  private emitPinch(center: Point, distance: number, scale: number): void {
+    const target = this.pinchState?.target ?? null;
+    const event = {
+      type: 'pinch' as const,
+      position: center,
+      distance,
+      scale,
+      target: target ?? undefined,
+    } satisfies GestureEvent;
+
+    if (target) {
+      target.emit('pinch', event);
+    }
+
+    this.game.emit('pinch', event);
+  }
+
   /**
    * Handle mouse down
    */
   private handlePointerDown = (event: MouseEvent): void => {
     event.preventDefault();
     const pos = this.getPointerPosition(event);
+    this.lastPointerPosition = pos;
 
     const pointer: PointerState = {
       id: 0,
@@ -119,6 +189,7 @@ export class GestureManager {
 
     // Find target entity
     const target = this.findEntityAtPosition(pos);
+    this.updateHoverTarget(pos, target);
     if (target) {
       this.currentDragTarget = target;
       target.emit('dragstart', {
@@ -149,8 +220,11 @@ export class GestureManager {
     if (!pointer) return;
 
     const pos = this.getPointerPosition(event);
+    this.lastPointerPosition = pos;
     pointer.previousPos = pointer.currentPos;
     pointer.currentPos = pos;
+
+    this.updateHoverTarget(pos);
 
     // Cancel long press if moved too much
     const distance = this.getDistance(pointer.startPos, pos);
@@ -193,6 +267,7 @@ export class GestureManager {
     if (!pointer) return;
 
     const pos = this.getPointerPosition(event);
+    this.lastPointerPosition = pos;
     const duration = performance.now() - pointer.startTime;
     const distance = this.getDistance(pointer.startPos, pos);
 
@@ -272,6 +347,8 @@ export class GestureManager {
     }
 
     this.pointers.delete(0);
+
+    this.updateHoverTarget(pos);
   };
 
   /**
@@ -429,6 +506,10 @@ export class GestureManager {
 
       this.pointers.delete(touch.identifier);
     }
+
+    if (event.touches.length < 2) {
+      this.pinchState = null;
+    }
   };
 
   /**
@@ -440,6 +521,9 @@ export class GestureManager {
       this.longPressTimeout = null;
     }
 
+    this.clearHover();
+    this.lastPointerPosition = null;
+
     if (this.currentDragTarget) {
       this.currentDragTarget.emit('dragend', {
         type: 'dragend',
@@ -450,6 +534,7 @@ export class GestureManager {
     }
 
     this.pointers.clear();
+    this.pinchState = null;
   };
 
   /**
@@ -479,15 +564,45 @@ export class GestureManager {
   /**
    * Handle pinch start
    */
-  private handlePinchStart(_event: TouchEvent): void {
-    // Implementation for pinch gesture
+  private handlePinchStart(event: TouchEvent): void {
+    if (event.touches.length !== 2) return;
+
+    const pos1 = this.getPointerPosition(event.touches[0]);
+    const pos2 = this.getPointerPosition(event.touches[1]);
+    const distance = this.getDistance(pos1, pos2);
+    const center = {
+      x: (pos1.x + pos2.x) / 2,
+      y: (pos1.y + pos2.y) / 2,
+    };
+
+    this.pinchState = {
+      startDistance: distance,
+      target: this.findEntityAtPosition(center),
+    };
+
+    this.emitPinch(center, distance, 1);
   }
 
   /**
    * Handle pinch move
    */
-  private handlePinchMove(_event: TouchEvent): void {
-    // Implementation for pinch gesture
+  private handlePinchMove(event: TouchEvent): void {
+    if (!this.pinchState || event.touches.length !== 2) return;
+
+    const pos1 = this.getPointerPosition(event.touches[0]);
+    const pos2 = this.getPointerPosition(event.touches[1]);
+    const distance = this.getDistance(pos1, pos2);
+    const center = {
+      x: (pos1.x + pos2.x) / 2,
+      y: (pos1.y + pos2.y) / 2,
+    };
+
+    if (this.pinchState.startDistance === 0) {
+      this.pinchState.startDistance = distance;
+    }
+
+    const scale = distance / this.pinchState.startDistance;
+    this.emitPinch(center, distance, scale);
   }
 
   /**

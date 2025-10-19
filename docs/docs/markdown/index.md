@@ -33,6 +33,7 @@ This index provides a complete overview of all Zap documentation. Each section i
 - **[Tap/Click](gestures/tap.md)** - Tap and click gesture detection
 - **[Drag](gestures/drag.md)** - Drag gesture for moving entities
 - **[Swipe](gestures/swipe.md)** - Swipe gesture for directional input
+- **[Pinch](gestures/pinch.md)** - Two-finger zoom and scale detection
 
 ## UI Components
 
@@ -86,6 +87,7 @@ This index provides a complete overview of all Zap documentation. Each section i
 - [Tap](gestures/tap.md) for buttons and selections
 - [Drag](gestures/drag.md) for moving objects
 - [Swipe](gestures/swipe.md) for directional controls
+- [Pinch](gestures/pinch.md) for zooming and scaling
 - [Collision Detection](advanced/collision-detection.md) for gameplay mechanics
 
 ### Managing Game State

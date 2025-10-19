@@ -1,9 +1,58 @@
 import type { Game } from './Game';
 import { EventEmitter } from './EventEmitter';
-import type { Entity } from '../entities/Entity';
-import { Sprite } from '../entities/Sprite';
+import { Entity } from '../entities/Entity';
 import { delay, interval, type TimerHandle } from '../utils/timer';
 import type { SceneOptions } from '../types';
+
+class SceneBackground extends Entity {
+  private color?: string;
+  private image: HTMLImageElement | null = null;
+
+  constructor(width: number, height: number, options: SceneOptions) {
+    super({
+      x: width / 2,
+      y: height / 2,
+      width,
+      height,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      zIndex: -1000,
+      interactive: false,
+      visible: true,
+    });
+
+    this.color = options.backgroundColor;
+    if (options.backgroundImage) {
+      this.setImage(options.backgroundImage);
+    }
+  }
+
+  private setImage(source: string | HTMLImageElement): void {
+    if (typeof source === 'string') {
+      const img = new Image();
+      img.onload = () => {
+        this.image = img;
+      };
+      img.src = source;
+    } else {
+      this.image = source;
+    }
+  }
+
+  protected draw(ctx: CanvasRenderingContext2D): void {
+    const offsetX = -this.width * this.anchorX;
+    const offsetY = -this.height * this.anchorY;
+
+    if (this.color) {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(offsetX, offsetY, this.width, this.height);
+    }
+
+    if (this.image) {
+      ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+    }
+  }
+}
 
 /**
  * Scene manages a collection of entities
@@ -13,7 +62,7 @@ export class Scene extends EventEmitter {
   private entities: Entity[] = [];
   private sortRequired: boolean = false;
   private timers: TimerHandle[] = [];
-  private backgroundSprite: Sprite | null = null;
+  private backgroundSprite: SceneBackground | null = null;
   private options: SceneOptions;
 
   constructor(options: SceneOptions = {}) {
@@ -43,15 +92,7 @@ export class Scene extends EventEmitter {
 
     // Create background sprite if backgroundImage or backgroundColor is provided
     if ((this.options.backgroundImage || this.options.backgroundColor) && !this.backgroundSprite) {
-      this.backgroundSprite = new Sprite({
-        x: game.width / 2,
-        y: game.height / 2,
-        width: game.width,
-        height: game.height,
-        color: this.options.backgroundColor,
-        image: this.options.backgroundImage,
-        zIndex: -1000
-      });
+      this.backgroundSprite = new SceneBackground(game.width, game.height, this.options);
       this.add(this.backgroundSprite);
     }
   }

@@ -71,6 +71,17 @@ export class Button extends Sprite {
       this.isPressed = false;
       this.updateColor();
     });
+
+    this.on('pointerover', () => {
+      this.isHovered = true;
+      this.updateColor();
+    });
+
+    this.on('pointerout', () => {
+      this.isHovered = false;
+      this.isPressed = false;
+      this.updateColor();
+    });
   }
 
   /**
@@ -86,6 +97,7 @@ export class Button extends Sprite {
   enable(): void {
     this.interactive = true;
     this.alpha = 1;
+    this.updateColor();
   }
 
   /**
@@ -94,6 +106,17 @@ export class Button extends Sprite {
   disable(): void {
     this.interactive = false;
     this.alpha = 0.5;
+    this.isPressed = false;
+    this.isHovered = false;
+    this.updateColor();
+  }
+
+  get onClick(): (() => void) | undefined {
+    return this.onClickCallback;
+  }
+
+  set onClick(callback: (() => void) | undefined) {
+    this.onClickCallback = callback;
   }
 
   /**

@@ -33,8 +33,10 @@ const game = new Game({
   enableTouchTrail: true
 });
 
-// Access and configure the trail
-game.touchTrail.setColor('#4fc3f7');
+// Access and configure the trail (will be null if enableTouchTrail is false)
+if (game.touchTrail) {
+  game.touchTrail.setColor('#4fc3f7');
+}
 ```
 
 ## Touch Trail Options
@@ -43,14 +45,16 @@ The TouchTrail can be configured after creation:
 
 ```javascript
 // Change color
-game.touchTrail.setColor('#e94560');
+if (game.touchTrail) {
+  game.touchTrail.setColor('#e94560');
 
-// Enable/disable
-game.touchTrail.enable();
-game.touchTrail.disable();
+  // Enable/disable
+  game.touchTrail.enable();
+  game.touchTrail.disable();
 
-// Clear trail
-game.touchTrail.clear();
+  // Clear trail
+  game.touchTrail.clear();
+}
 ```
 
 ## Creating Custom Touch Trails
@@ -88,23 +92,26 @@ game.on('render', (ctx) => {
 Different colors for different interactions:
 
 ```javascript
-// Blue trail for normal interaction
-game.touchTrail.setColor('#4fc3f7');
+if (game.touchTrail) {
+  // Blue trail for normal interaction
+  game.touchTrail.setColor('#4fc3f7');
 
-// Red trail for danger zones
-game.touchTrail.setColor('#e94560');
+  // Red trail for danger zones
+  game.touchTrail.setColor('#e94560');
 
-// Green trail for success
-game.touchTrail.setColor('#51cf66');
+  // Green trail for success
+  game.touchTrail.setColor('#51cf66');
 
-// Rainbow effect (change over time)
-const colors = ['#e94560', '#f39c12', '#51cf66', '#4fc3f7', '#9b59b6'];
-let colorIndex = 0;
+  // Rainbow effect (change over time)
+  const colors = ['#e94560', '#f39c12', '#51cf66', '#4fc3f7', '#9b59b6'];
+  let colorIndex = 0;
 
-setInterval(() => {
-  game.touchTrail.setColor(colors[colorIndex]);
-  colorIndex = (colorIndex + 1) % colors.length;
-}, 500);
+  setInterval(() => {
+    if (!game.touchTrail) return;
+    game.touchTrail.setColor(colors[colorIndex]);
+    colorIndex = (colorIndex + 1) % colors.length;
+  }, 500);
+}
 ```
 
 ## Common Patterns
@@ -116,12 +123,16 @@ Enable trail only when needed:
 ```javascript
 // Enable when dragging
 game.on('dragstart', () => {
-  game.touchTrail.enable();
+  if (game.touchTrail) {
+    game.touchTrail.enable();
+  }
 });
 
 game.on('dragend', () => {
-  game.touchTrail.disable();
-  game.touchTrail.clear();
+  if (game.touchTrail) {
+    game.touchTrail.disable();
+    game.touchTrail.clear();
+  }
 });
 ```
 

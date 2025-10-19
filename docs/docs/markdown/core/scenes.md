@@ -65,15 +65,14 @@ const scene = new Scene({
 import { Game, Scene, Sprite } from '@VERSION';
 
 const game = new Game({
-  parent: '#app',
-  width: 1920,
-  height: 1080,
+  width: 400,
+  height: 300,
   responsive: true
 });
 
 // Background image automatically fills the scene
 const scene = new Scene({
-  backgroundImage: 'background.jpg'
+  backgroundImage: '../assets/pixel-girl.png'
 });
 
 // Add entities on top
@@ -82,7 +81,8 @@ const player = new Sprite({
   y: game.height / 2,
   width: 50,
   height: 50,
-  color: '#e94560'
+  color: '#e94560',
+  radius: 25
 });
 
 scene.add(player);
@@ -95,7 +95,7 @@ The background image will automatically:
 - Stretch/scale to fit the game dimensions
 - Render behind all entities (at `zIndex: -1000`)
 
-**Note**: The image will stretch to fit your game's aspect ratio. For best results, use images that match your game's aspect ratio (e.g., 16:9 images for a 1920×1080 game).
+**Note**: The image will stretch to fit your game's aspect ratio. For best results, use images that match your game's aspect ratio (e.g., 4:3 images for a 400×300 game).
 
 ## Removing Entities
 
@@ -176,13 +176,13 @@ const gameScene = new Scene();
 game.setScene(gameScene);
 
 // With fade transition
-game.setScene(gameScene, {
+await game.setScene(gameScene, {
   transition: 'fade',
   duration: 500
 });
 
 // With slide transition
-game.setScene(gameScene, {
+await game.setScene(gameScene, {
   transition: 'slide-left',
   duration: 300
 });
@@ -194,6 +194,8 @@ Available transitions:
 - `'slide-right'` - Slide right
 - `'slide-up'` - Slide up
 - `'slide-down'` - Slide down
+
+`setScene` resolves when the transition finishes. You can also call `game.transitionTo(gameScene, options)` if you prefer a more explicit transition API.
 
 ## Complete Example
 

@@ -104,7 +104,7 @@ Scenes contain and manage entities. Use scenes for different game states (menu, 
 ```typescript
 const scene = new Scene({
   backgroundColor: '#0f3460', // Optional: solid background color
-  backgroundImage: 'bg.png', // Optional: image background
+  backgroundImage: 'assets/bg.png', // Optional: image background
 });
 
 scene.add(entity); // Add an entity

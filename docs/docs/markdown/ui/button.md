@@ -65,7 +65,7 @@ const button = new Button({
 
   // Colors
   backgroundColor: '#4fc3f7',    // Default state
-  hoverColor: '#6dd5fa',         // Hover state (visual only)
+  hoverColor: '#6dd5fa',         // Hover state (pointer hover)
   pressColor: '#38a3d1',         // Pressed state
   textColor: '#ffffff',          // Text color
 
@@ -82,6 +82,8 @@ const button = new Button({
 });
 ```
 
+You can change the click handler later with `button.onClick = () => { ... }`.
+
 ## Button States
 
 Buttons automatically handle three visual states:
@@ -92,7 +94,7 @@ Normal appearance when not interacted with.
 
 ### Hover State
 
-Visual indication when mouse is over button (currently uses press for visual feedback).
+Visual indication when the pointer is over the button.
 
 ### Pressed State
 

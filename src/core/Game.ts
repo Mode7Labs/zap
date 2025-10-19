@@ -28,6 +28,17 @@ export class Game extends EventEmitter {
   private backgroundColor: string;
   private transitioning: boolean = false;
   private transitionProgress: number = 0;
+  private transitionData:
+    | {
+        type: TransitionType;
+        duration: number;
+        elapsed: number;
+        previousScene: Scene | null;
+        resolve: () => void;
+      }
+    | null = null;
+
+  private paused: boolean = false;
 
   // Performance
   private targetFPS: number | null = null;
@@ -43,6 +54,26 @@ export class Game extends EventEmitter {
   // Responsive
   private responsive: boolean = false;
   private resizeObserver: ResizeObserver | null = null;
+
+  private readonly handlePointerDown = (e: PointerEvent): void => {
+    const pos = this.canvasToGame(e.clientX, e.clientY);
+    this.emit('pointerdown', { position: pos, originalEvent: e });
+  };
+
+  private readonly handlePointerMove = (e: PointerEvent): void => {
+    const pos = this.canvasToGame(e.clientX, e.clientY);
+    this.emit('pointermove', { position: pos, originalEvent: e });
+  };
+
+  private readonly handlePointerUp = (e: PointerEvent): void => {
+    const pos = this.canvasToGame(e.clientX, e.clientY);
+    this.emit('pointerup', { position: pos, originalEvent: e });
+  };
+
+  private readonly handleClick = (e: MouseEvent): void => {
+    const pos = this.canvasToGame(e.clientX, e.clientY);
+    this.emit('click', { position: pos, originalEvent: e });
+  };
 
   constructor(options: GameOptions = {}) {
     super();
@@ -124,31 +155,82 @@ export class Game extends EventEmitter {
    * Setup pointer event listeners for the canvas
    */
   private setupCanvasPointerEvents(): void {
-    this.canvas.addEventListener('pointerdown', (e) => {
-      const pos = this.canvasToGame(e.clientX, e.clientY);
-      this.emit('pointerdown', { position: pos, originalEvent: e });
-    });
+    this.canvas.addEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.addEventListener('pointermove', this.handlePointerMove);
+    this.canvas.addEventListener('pointerup', this.handlePointerUp);
+    this.canvas.addEventListener('click', this.handleClick);
+  }
 
-    this.canvas.addEventListener('pointermove', (e) => {
-      const pos = this.canvasToGame(e.clientX, e.clientY);
-      this.emit('pointermove', { position: pos, originalEvent: e });
-    });
+  /**
+   * Remove pointer event listeners from the canvas
+   */
+  private removeCanvasPointerEvents(): void {
+    this.canvas.removeEventListener('pointerdown', this.handlePointerDown);
+    this.canvas.removeEventListener('pointermove', this.handlePointerMove);
+    this.canvas.removeEventListener('pointerup', this.handlePointerUp);
+    this.canvas.removeEventListener('click', this.handleClick);
+  }
 
-    this.canvas.addEventListener('pointerup', (e) => {
-      const pos = this.canvasToGame(e.clientX, e.clientY);
-      this.emit('pointerup', { position: pos, originalEvent: e });
-    });
+  /**
+   * Set the current scene. Returns a promise that resolves when any transition completes.
+   */
+  setScene(
+    scene: Scene,
+    options: { transition?: TransitionType; duration?: number } = {}
+  ): Promise<void> {
+    if (options.transition) {
+      return this.transitionTo(scene, {
+        type: options.transition,
+        duration: options.duration,
+      });
+    }
 
-    this.canvas.addEventListener('click', (e) => {
-      const pos = this.canvasToGame(e.clientX, e.clientY);
-      this.emit('click', { position: pos, originalEvent: e });
+    this.applyScene(scene);
+    return Promise.resolve();
+  }
+
+  /**
+   * Transition to a new scene with animation
+   */
+  transitionTo(
+    scene: Scene,
+    options: { type?: TransitionType; duration?: number } = {}
+  ): Promise<void> {
+    if (this.transitioning) {
+      return Promise.resolve();
+    }
+
+    const previousScene = this.currentScene;
+    if (previousScene === scene) {
+      return Promise.resolve();
+    }
+
+    const duration = Math.max(1, options.duration ?? 500);
+    const type = options.type ?? 'fade';
+
+    return new Promise((resolve) => {
+      this.transitioning = true;
+      this.transitionProgress = 0;
+      this.transitionData = {
+        type,
+        duration,
+        elapsed: 0,
+        previousScene,
+        resolve,
+      };
+
+      this.applyScene(scene);
     });
   }
 
   /**
-   * Set the current scene
+   * Apply a scene immediately, handling lifecycle hooks.
    */
-  setScene(scene: Scene): void {
+  private applyScene(scene: Scene): void {
+    if (this.currentScene === scene) {
+      return;
+    }
+
     if (this.currentScene) {
       this.currentScene.onExit();
     }
@@ -158,45 +240,6 @@ export class Game extends EventEmitter {
     scene.onEnter();
 
     this.emit('scenechange', scene);
-  }
-
-  /**
-   * Transition to a new scene with animation
-   */
-  async transitionTo(
-    scene: Scene,
-    options: { type?: TransitionType; duration?: number } = {}
-  ): Promise<void> {
-    if (this.transitioning) return;
-
-    // TODO: Implement different transition types (options.type)
-    const duration = options.duration ?? 500;
-
-    this.transitioning = true;
-    this.transitionProgress = 0;
-
-    const startTime = performance.now();
-
-    return new Promise((resolve) => {
-      const animate = () => {
-        const elapsed = performance.now() - startTime;
-        this.transitionProgress = Math.min(elapsed / duration, 1);
-
-        if (this.transitionProgress >= 0.5 && this.currentScene !== scene) {
-          this.setScene(scene);
-        }
-
-        if (this.transitionProgress >= 1) {
-          this.transitioning = false;
-          this.transitionProgress = 0;
-          resolve();
-        } else {
-          requestAnimationFrame(animate);
-        }
-      };
-
-      animate();
-    });
   }
 
   /**
@@ -212,10 +255,15 @@ export class Game extends EventEmitter {
   start(): void {
     if (this.running) return;
 
+    const wasPaused = this.paused;
     this.running = true;
+    this.paused = false;
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     this.emit('start');
+    if (wasPaused) {
+      this.emit('resume');
+    }
   }
 
   /**
@@ -225,11 +273,13 @@ export class Game extends EventEmitter {
     if (!this.running) return;
 
     this.running = false;
+    this.paused = true;
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
     this.emit('stop');
+    this.emit('pause');
   }
 
   /**
@@ -261,6 +311,21 @@ export class Game extends EventEmitter {
       this.fpsLastTime = currentTime;
     }
 
+    // Advance transitions
+    if (this.transitioning && this.transitionData) {
+      this.transitionData.elapsed += deltaTime * 1000;
+      this.transitionProgress = Math.min(
+        this.transitionData.elapsed / this.transitionData.duration,
+        1
+      );
+
+      if (this.transitionProgress >= 1) {
+        const { resolve } = this.transitionData;
+        this.finishTransition();
+        resolve();
+      }
+    }
+
     // Clear canvas
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(0, 0, this.width, this.height);
@@ -272,29 +337,28 @@ export class Game extends EventEmitter {
       this.touchTrail.update(deltaTime);
     }
 
-    // Apply camera transform
+    if (this.currentScene) {
+      this.currentScene.update(deltaTime);
+    }
+
     this.ctx.save();
     this.camera.applyTransform(this.ctx);
 
-    // Update and render scene
-    if (this.currentScene) {
-      this.currentScene.update(deltaTime);
+    if (this.transitioning && this.transitionData) {
+      this.renderTransitionFrame();
+    } else if (this.currentScene) {
       this.currentScene.render(this.ctx);
     }
 
     this.ctx.restore();
 
-    // Render touch trail (without camera transform)
     if (this.touchTrail) {
       this.ctx.save();
       this.touchTrail.render(this.ctx);
       this.ctx.restore();
     }
 
-    // Render transition overlay
-    if (this.transitioning) {
-      this.renderTransition();
-    }
+    this.emit('render', this.ctx);
 
     // Render FPS counter
     if (this.showFPS) {
@@ -318,22 +382,87 @@ export class Game extends EventEmitter {
   }
 
   /**
-   * Render transition effect
+   * Render transition frame, blending previous and current scenes.
    */
-  private renderTransition(): void {
-    const progress = this.transitionProgress;
-    let alpha: number;
-
-    if (progress < 0.5) {
-      // Fade out
-      alpha = progress * 2;
-    } else {
-      // Fade in
-      alpha = 2 - progress * 2;
+  private renderTransitionFrame(): void {
+    if (!this.transitionData) {
+      if (this.currentScene) {
+        this.currentScene.render(this.ctx);
+      }
+      return;
     }
 
-    this.ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-    this.ctx.fillRect(0, 0, this.width, this.height);
+    const { type, previousScene } = this.transitionData;
+    const progress = this.transitionProgress;
+
+    const renderPrevious = () => {
+      if (!previousScene) return;
+      this.ctx.save();
+      switch (type) {
+        case 'slide-left':
+          this.ctx.translate(-progress * this.width, 0);
+          break;
+        case 'slide-right':
+          this.ctx.translate(progress * this.width, 0);
+          break;
+        case 'slide-up':
+          this.ctx.translate(0, -progress * this.height);
+          break;
+        case 'slide-down':
+          this.ctx.translate(0, progress * this.height);
+          break;
+        case 'fade':
+        default:
+          this.ctx.globalAlpha = 1 - progress;
+          break;
+      }
+      previousScene.render(this.ctx);
+      this.ctx.restore();
+    };
+
+    const renderCurrent = () => {
+      if (!this.currentScene) return;
+      this.ctx.save();
+      switch (type) {
+        case 'slide-left':
+          this.ctx.translate((1 - progress) * this.width, 0);
+          break;
+        case 'slide-right':
+          this.ctx.translate(-(1 - progress) * this.width, 0);
+          break;
+        case 'slide-up':
+          this.ctx.translate(0, (1 - progress) * this.height);
+          break;
+        case 'slide-down':
+          this.ctx.translate(0, -(1 - progress) * this.height);
+          break;
+        case 'fade':
+        default:
+          if (previousScene) {
+            this.ctx.globalAlpha = progress;
+          }
+          break;
+      }
+      this.currentScene.render(this.ctx);
+      this.ctx.restore();
+    };
+
+    if (type === 'fade') {
+      renderPrevious();
+      renderCurrent();
+    } else {
+      renderPrevious();
+      renderCurrent();
+    }
+  }
+
+  /**
+   * Reset transition state after completion.
+   */
+  private finishTransition(): void {
+    this.transitioning = false;
+    this.transitionProgress = 0;
+    this.transitionData = null;
   }
 
   /**
@@ -428,6 +557,8 @@ export class Game extends EventEmitter {
    */
   destroy(): void {
     this.stop();
+
+    this.removeCanvasPointerEvents();
 
     // Cleanup ResizeObserver
     if (this.resizeObserver) {

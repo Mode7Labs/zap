@@ -274,7 +274,7 @@ Smoothly transition between tracks:
 const fadeOut = () => {
   return new Promise(resolve => {
     const interval = setInterval(() => {
-      const currentVolume = audioManager.musicVolume;
+      const currentVolume = audioManager.getMusicVolume();
       if (currentVolume > 0.1) {
         audioManager.setMusicVolume(currentVolume - 0.1);
       } else {
@@ -293,7 +293,7 @@ audioManager.playMusic('/music/new-track.mp3');
 
 // Fade in new track
 const fadeIn = setInterval(() => {
-  const currentVolume = audioManager.musicVolume;
+  const currentVolume = audioManager.getMusicVolume();
   if (currentVolume < 0.7) {
     audioManager.setMusicVolume(currentVolume + 0.1);
   } else {

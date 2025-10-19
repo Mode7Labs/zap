@@ -133,6 +133,13 @@ export class AudioManager {
   }
 
   /**
+   * Get master volume
+   */
+  getMasterVolume(): number {
+    return this.masterVolume;
+  }
+
+  /**
    * Set music volume
    */
   setMusicVolume(volume: number): void {
@@ -143,10 +150,24 @@ export class AudioManager {
   }
 
   /**
+   * Get music volume
+   */
+  getMusicVolume(): number {
+    return this.musicVolume;
+  }
+
+  /**
    * Set sound effects volume
    */
   setSFXVolume(volume: number): void {
     this.sfxVolume = Math.max(0, Math.min(1, volume));
+  }
+
+  /**
+   * Get sound effects volume
+   */
+  getSFXVolume(): number {
+    return this.sfxVolume;
   }
 
   /**

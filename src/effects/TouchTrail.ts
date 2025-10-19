@@ -53,11 +53,21 @@ export class TouchTrail {
    * Update trail
    */
   update(deltaTime: number): void {
-    // Update ages and remove old points
-    this.points = this.points.filter(point => {
-      point.age += deltaTime * 1000;
-      return point.age < point.maxAge;
-    });
+    const cutoff = deltaTime * 1000;
+    let writeIndex = 0;
+
+    for (let readIndex = 0; readIndex < this.points.length; readIndex++) {
+      const point = this.points[readIndex];
+      point.age += cutoff;
+
+      if (point.age < point.maxAge) {
+        this.points[writeIndex++] = point;
+      }
+    }
+
+    if (writeIndex < this.points.length) {
+      this.points.length = writeIndex;
+    }
   }
 
   /**
@@ -69,8 +79,8 @@ export class TouchTrail {
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    ctx.strokeStyle = this.color;
 
-    // Draw trail as connected line segments
     for (let i = 1; i < this.points.length; i++) {
       const prev = this.points[i - 1];
       const curr = this.points[i];
@@ -81,11 +91,12 @@ export class TouchTrail {
       ctx.beginPath();
       ctx.moveTo(prev.x, prev.y);
       ctx.lineTo(curr.x, curr.y);
-      ctx.strokeStyle = this.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+      ctx.globalAlpha = alpha;
       ctx.lineWidth = width;
       ctx.stroke();
     }
 
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 

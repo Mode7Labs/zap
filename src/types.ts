@@ -103,7 +103,16 @@ export interface TweenOptions {
   onComplete?: () => void;
 }
 
-export type GestureType = 'tap' | 'longpress' | 'swipe' | 'drag' | 'pinch' | 'dragstart' | 'dragend';
+export type GestureType =
+  | 'tap'
+  | 'longpress'
+  | 'swipe'
+  | 'drag'
+  | 'pinch'
+  | 'dragstart'
+  | 'dragend'
+  | 'pointerover'
+  | 'pointerout';
 
 export interface GestureEvent {
   type: GestureType;

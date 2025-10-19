@@ -259,7 +259,6 @@ const game = new Game({
   width: 400,
   height: 300,
   backgroundColor: '#0f3460',
-  parent: document.body,
 
   // Quality
   pixelRatio: window.devicePixelRatio,
@@ -298,13 +297,15 @@ game.setScene(newScene);
 With a transition:
 
 ```javascript
-game.setScene(newScene, {
+await game.setScene(newScene, {
   transition: 'fade',
   duration: 500
 });
 ```
 
 Available transitions: `'fade'`, `'slide-left'`, `'slide-right'`, `'slide-up'`, `'slide-down'`
+
+`setScene` returns a promise that resolves once the transition completes, so `await` it when you need to run follow-up logic after the switch. You can also call `game.transitionTo(scene, options)` directly when you want to queue a transition without replacing the current one immediately.
 
 ### start()
 
@@ -343,6 +344,16 @@ game.camera         // Camera instance
 game.gestures       // GestureManager instance
 game.currentScene   // Current Scene (read-only)
 ```
+
+## Game Events
+
+Use `game.on(event, handler)` to subscribe:
+
+- `start` / `stop` – game loop state changes
+- `resume` / `pause` – resume after a stop or pause without destroying the game
+- `update` – runs every frame with `deltaTime`
+- `render` – fires after the engine renders, passing the 2D context for custom overlays
+- `scenechange` – emitted whenever a new scene becomes active
 
 ## Next Steps
 

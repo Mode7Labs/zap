@@ -1,6 +1,6 @@
 {
   "version": "0.1.3",
-  "generated": "2025-10-19T07:28:39.699Z",
+  "generated": "2025-10-19T22:38:51.450Z",
   "repository": "https://github.com/Mode7Labs/zap",
   "description": "Complete Zap game engine documentation for AI assistants",
   "categories": {
@@ -103,6 +103,13 @@
         "description": "Dragging and moving interactive entities",
         "path": "gestures/drag.md",
         "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/gestures/drag.md"
+      },
+      {
+        "slug": "gestures/pinch",
+        "title": "Pinch",
+        "description": "Multi-touch pinch gesture for zooming and scaling",
+        "path": "gestures/pinch.md",
+        "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/gestures/pinch.md"
       },
       {
         "slug": "gestures/swipe",
