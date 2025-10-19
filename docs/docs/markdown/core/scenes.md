@@ -72,7 +72,7 @@ const game = new Game({
 
 // Background image automatically fills the scene
 const scene = new Scene({
-  backgroundImage: '../assets/pixel-girl.png'
+  backgroundImage: '../assets/bg.jpg'
 });
 
 // Add entities on top
