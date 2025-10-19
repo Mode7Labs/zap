@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "build:docs": "npm run build && rm -rf docs/dist && cp -r dist docs/dist",
+    "build:docs": "npm run build && rm -rf docs/dist && cp -r dist docs/dist && node build-docs-json.js",
+    "build:docs-json": "node build-docs-json.js",
     "dev": "tsup src/index.ts --format esm --watch",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "npm run build",

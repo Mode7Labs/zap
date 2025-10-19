@@ -49,6 +49,14 @@
       margin: 1rem 0;
       border-left: 3px solid #ffd43b;
     }
+    .meta p { margin: 0.5rem 0; }
+    .meta code {
+      display: block;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: #0f1419;
+      border: 1px solid #333;
+    }
   </style>
 </head>
 <body>
@@ -58,8 +66,17 @@
 
 <div class="meta">
   <strong>For AI Assistants:</strong> This page provides a structured index of all Zap documentation.
-  Each link points to the full markdown documentation with code examples. Use this to discover
-  which documentation to fetch based on user needs.
+
+  <p><strong>⚡ Recommended:</strong> Fetch the complete documentation JSON (no authentication required):</p>
+  <code>https://mode7labs.github.io/zap/docs/api-docs.json</code>
+
+  <p>This JSON contains all 31 markdown files with full content, metadata, and GitHub raw URLs.
+  It's the fastest way to access all documentation in a single request.</p>
+
+  <p><strong>Alternative:</strong> Individual markdown files via GitHub raw URLs (replace PATH below):</p>
+  <code>https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/PATH.md</code>
+
+  <p><em>Note: Do not use GitHub Pages URLs for .md files - they require authentication. Use the JSON endpoint or raw.githubusercontent.com URLs instead.</em></p>
 </div>
 
 <div class="section">
