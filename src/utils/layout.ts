@@ -4,6 +4,9 @@ import type { Entity } from '../entities/Entity';
  * Layout utilities for positioning entities
  */
 
+// Re-export math utilities for backwards compatibility
+export { clamp, lerp, map, randomInt, randomFloat, randomItem } from './math';
+
 export interface GridOptions {
   columns: number;
   rows: number;
@@ -86,52 +89,4 @@ export function layoutColumn(
 export function center(entity: Entity, width: number, height: number): void {
   entity.x = width / 2;
   entity.y = height / 2;
-}
-
-/**
- * Clamp a value between min and max
- */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-
-/**
- * Linear interpolation
- */
-export function lerp(start: number, end: number, t: number): number {
-  return start + (end - start) * t;
-}
-
-/**
- * Map a value from one range to another
- */
-export function map(
-  value: number,
-  inMin: number,
-  inMax: number,
-  outMin: number,
-  outMax: number
-): number {
-  return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-}
-
-/**
- * Random integer between min and max (inclusive)
- */
-export function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
- * Random float between min and max
- */
-export function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
-/**
- * Random item from array
- */
-export function randomItem<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
 }

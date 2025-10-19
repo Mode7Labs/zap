@@ -128,6 +128,13 @@ export class GestureManager {
       } as GestureEvent);
     }
 
+    // Emit canvas-level dragstart
+    this.game.emit('dragstart', {
+      type: 'dragstart',
+      position: pos,
+      target,
+    } as GestureEvent);
+
     // Start long press timer
     this.longPressTimeout = window.setTimeout(() => {
       this.handleLongPress(0);
@@ -167,6 +174,14 @@ export class GestureManager {
           target: this.currentDragTarget,
         } as GestureEvent);
       }
+
+      // Emit canvas-level drag
+      this.game.emit('drag', {
+        type: 'drag',
+        position: pos,
+        delta,
+        target: this.currentDragTarget,
+      } as GestureEvent);
     }
   };
 
@@ -198,6 +213,13 @@ export class GestureManager {
           target,
         } as GestureEvent);
       }
+
+      // Emit canvas-level tap
+      this.game.emit('tap', {
+        type: 'tap',
+        position: pos,
+        target,
+      } as GestureEvent);
     }
     // Check for swipe
     else if (distance > this.swipeThreshold) {
@@ -218,6 +240,17 @@ export class GestureManager {
           target,
         } as GestureEvent);
       }
+
+      // Emit canvas-level swipe
+      this.game.emit('swipe', {
+        type: 'swipe',
+        position: pos,
+        delta: { x: pos.x - pointer.startPos.x, y: pos.y - pointer.startPos.y },
+        velocity,
+        direction,
+        distance,
+        target,
+      } as GestureEvent);
     }
 
     // Handle drag end
@@ -227,6 +260,14 @@ export class GestureManager {
         position: pos,
         target: this.currentDragTarget,
       } as GestureEvent);
+
+      // Emit canvas-level dragend
+      this.game.emit('dragend', {
+        type: 'dragend',
+        position: pos,
+        target: this.currentDragTarget,
+      } as GestureEvent);
+
       this.currentDragTarget = null;
     }
 
@@ -426,6 +467,13 @@ export class GestureManager {
         target,
       } as GestureEvent);
     }
+
+    // Emit canvas-level longpress
+    this.game.emit('longpress', {
+      type: 'longpress',
+      position: pointer.currentPos,
+      target,
+    } as GestureEvent);
   }
 
   /**

@@ -1,6 +1,6 @@
 {
   "name": "@mode-7/zap",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Lightweight gesture-first 2D game engine for interactive demos and playable ads",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -19,10 +19,11 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "build:docs": "npm run build && rm -rf web/dist && cp -r dist web/dist",
     "dev": "tsup src/index.ts --format esm --watch",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "docs": "npx serve docs"
+    "docs": "npx serve web"
   },
   "keywords": [
     "game-engine",

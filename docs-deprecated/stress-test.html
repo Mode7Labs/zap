@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stress Test - Zap Engine</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    #stats {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-family: monospace;
+      font-size: 16px;
+      line-height: 1.8;
+      pointer-events: none;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    #stats .label {
+      color: #94a3b8;
+      margin-right: 0.5rem;
+    }
+
+    #stats .value {
+      color: #22d3ee;
+      font-weight: bold;
+    }
+
+    #instructions {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    #goal {
+      position: absolute;
+      top: 120px;
+      left: 20px;
+      background: rgba(139, 92, 246, 0.3);
+      border: 2px solid #8b5cf6;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      font-family: monospace;
+      font-size: 14px;
+      pointer-events: none;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    #goal .progress-bar {
+      margin-top: 0.5rem;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    #goal .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="stats">
+      <div><span class="label">Sprites:</span><span class="value" id="sprite-count">0</span></div>
+      <div><span class="label">FPS:</span><span class="value" id="fps">60</span></div>
+      <div><span class="label">Total Spawned:</span><span class="value" id="total-spawned">0</span></div>
+    </div>
+    <div id="goal">
+      <div>🎯 Goal: 100,000 sprites</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+    </div>
+    <div id="instructions">Click and hold to spawn sprites continuously!</div>
+  </div>
+
+  <script type="module">
+    import { Game, Scene, Sprite } from '/dist/index.mjs';
+
+    // Game configuration
+    const SPRITES_PER_CLICK = 1000;
+    const LIFETIME = 120000; // 2 minutes in ms
+    const SPAWN_INTERVAL = 50; // ms between spawns when holding
+    const GOAL = 100000;
+    const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4'];
+
+    let totalSprites = 0;
+    let totalSpawned = 0;
+    let activeSprites = [];
+    let spawnInterval = null;
+    let isHolding = false;
+    let currentX = 0;
+    let currentY = 0;
+
+    // Create game
+    const game = new Game({
+      width: 1200,
+      height: 800,
+      backgroundColor: '#0f172a',
+      parent: '#game-container',
+      showFPS: false // We'll use custom FPS display
+    });
+
+    const scene = new Scene();
+
+    // Track FPS manually for custom display
+    let fps = 0;
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+
+    game.on('update', () => {
+      frameCount++;
+      const now = performance.now();
+      if (now - lastFpsUpdate >= 1000) {
+        fps = frameCount;
+        frameCount = 0;
+        lastFpsUpdate = now;
+        updateStats();
+      }
+    });
+
+    // Use engine's pointer events API
+    game.on('pointerdown', (event) => {
+      currentX = event.position.x;
+      currentY = event.position.y;
+      isHolding = true;
+
+      // Spawn immediately
+      spawnBurst(currentX, currentY);
+
+      // Then spawn continuously while holding
+      spawnInterval = setInterval(() => {
+        if (isHolding) {
+          spawnBurst(currentX, currentY);
+        }
+      }, SPAWN_INTERVAL);
+    });
+
+    game.on('pointermove', (event) => {
+      if (isHolding) {
+        currentX = event.position.x;
+        currentY = event.position.y;
+      }
+    });
+
+    game.on('pointerup', () => {
+      isHolding = false;
+      if (spawnInterval) {
+        clearInterval(spawnInterval);
+        spawnInterval = null;
+      }
+    });
+
+    function spawnBurst(x, y) {
+      for (let i = 0; i < SPRITES_PER_CLICK; i++) {
+        createSprite(x, y);
+      }
+      totalSpawned += SPRITES_PER_CLICK;
+      updateStats();
+    }
+
+    function createSprite(x, y) {
+      // Random size between 4-12px
+      const size = Math.random() * 8 + 4;
+
+      // Random initial velocity (particle-like motion)
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 200 + 50;
+      const velocityX = Math.cos(angle) * speed;
+      const velocityY = Math.sin(angle) * speed;
+
+      const sprite = new Sprite({
+        x: x,
+        y: y,
+        width: size,
+        height: size,
+        radius: size / 2,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: 1
+      });
+
+      // Store physics data
+      sprite.userData = {
+        velocityX: velocityX,
+        velocityY: velocityY,
+        lifetime: LIFETIME,
+        elapsed: 0,
+        gravity: 100, // pixels per second squared
+        drag: 0.98 // air resistance
+      };
+
+      scene.add(sprite);
+      activeSprites.push(sprite);
+      totalSprites++;
+
+      // Custom update for this sprite
+      const updateHandler = (deltaTime) => {
+        const data = sprite.userData;
+        data.elapsed += deltaTime * 1000;
+
+        // Apply physics
+        data.velocityY += data.gravity * deltaTime;
+        data.velocityX *= data.drag;
+        data.velocityY *= data.drag;
+
+        sprite.x += data.velocityX * deltaTime;
+        sprite.y += data.velocityY * deltaTime;
+
+        // Fade out over lifetime
+        const progress = data.elapsed / data.lifetime;
+        sprite.alpha = Math.max(0, 1 - progress);
+
+        // Rotate while falling
+        sprite.rotation += deltaTime * 2;
+
+        // Remove when lifetime expires
+        if (data.elapsed >= data.lifetime) {
+          sprite.off('update', updateHandler);
+          scene.remove(sprite);
+          totalSprites--;
+          const index = activeSprites.indexOf(sprite);
+          if (index > -1) activeSprites.splice(index, 1);
+          updateStats();
+        }
+      };
+
+      sprite.on('update', updateHandler);
+    }
+
+    function updateStats() {
+      document.getElementById('sprite-count').textContent = totalSprites.toLocaleString();
+      document.getElementById('fps').textContent = fps;
+      document.getElementById('total-spawned').textContent = totalSpawned.toLocaleString();
+
+      // Update progress bar
+      const progress = Math.min((totalSpawned / GOAL) * 100, 100);
+      document.getElementById('progress').style.width = progress + '%';
+
+      // Celebrate when goal is reached
+      if (totalSpawned >= GOAL && totalSpawned - SPRITES_PER_CLICK < GOAL) {
+        const goal = document.getElementById('goal');
+        goal.style.background = 'rgba(16, 185, 129, 0.3)';
+        goal.style.borderColor = '#10b981';
+        goal.innerHTML = '<div>🎉 Goal Reached! 100K sprites!</div><div class="progress-bar"><div class="progress-fill" style="width: 100%"></div></div>';
+      }
+    }
+
+    // Auto-spawn some sprites on load to show the effect
+    setTimeout(() => {
+      spawnBurst(game.width / 2, game.height / 3);
+    }, 500);
+
+    // Hide instructions after a few seconds
+    setTimeout(() => {
+      const instructions = document.getElementById('instructions');
+      instructions.style.transition = 'opacity 0.5s';
+      instructions.style.opacity = '0';
+      setTimeout(() => {
+        instructions.style.display = 'none';
+      }, 500);
+    }, 4000);
+
+    game.setScene(scene);
+    game.start();
+    updateStats();
+  </script>
+</body>
+</html>

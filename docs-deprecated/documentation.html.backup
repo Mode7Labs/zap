@@ -329,6 +329,12 @@
         <div class="nav-item" data-demo="touchtrail">
           <span class="nav-item-icon">✨</span> Touch Trail
         </div>
+        <div class="nav-item" data-demo="canvasevents">
+          <span class="nav-item-icon">🖱️</span> Canvas Events
+        </div>
+        <div class="nav-item" data-demo="canvasgestures">
+          <span class="nav-item-icon">👋</span> Canvas Gestures
+        </div>
 
         <div class="nav-section-title">Animation & Effects</div>
         <div class="nav-item" data-demo="animations">
@@ -376,30 +382,9 @@
   </div>
 
   <script type="module">
-    import {
-      Game,
-      Scene,
-      Sprite,
-      Text,
-      AnimatedSprite,
-      NinePatch,
-      Button,
-      ParticleEmitter,
-      TouchTrail,
-      loadGoogleFont,
-      Layout,
-      Easing,
-      AssetLoader,
-      Storage,
-      audioManager,
-      delay,
-      interval,
-      wait
-    } from 'https://esm.sh/@mode-7/zap@0.1.2';
+    import { loadDemo as loadDemoModule } from './demos/loader.js';
 
     let currentGame = null;
-
-    const demos = {
       installation: {
         title: 'Installation',
         description: 'Get started with @mode7/zap',
@@ -1189,11 +1174,26 @@ const text = new Text({
 
       animations: {
         title: 'Animations',
-        description: 'Tween sprite properties smoothly',
-        code: `sprite.tween(
+        description: 'Tween sprite properties with chaining',
+        code: `// Simple tween
+sprite.tween(
   { x: 350, rotation: Math.PI * 2 },
   { duration: 1000, easing: 'easeInOutQuad' }
-);`,
+);
+
+// Chain tweens with .then()
+sprite.tween(
+  { x: 350 },
+  { duration: 500 }
+).then(() => {
+  // This runs when first tween completes
+  sprite.tween(
+    { y: 250 },
+    { duration: 500 }
+  ).then(() => {
+    console.log('All animations complete!');
+  });
+});`,
         init: (container) => {
           const game = new Game({
             parent: container,
@@ -1345,14 +1345,35 @@ canvas.addEventListener('click', () => {
 
       collision: {
         title: 'Collision Detection',
-        description: 'Detect when sprites intersect',
-        code: `if (sprite1.intersects(sprite2)) {
-  console.log('Collision!');
-}
+        description: 'Automatic collision detection with events',
+        code: `// Enable automatic collision detection
+const player = new Sprite({
+  x: 200, y: 150,
+  width: 50, height: 50,
+  color: '#e94560',
+  checkCollisions: true,      // Enable collision checking
+  collisionTags: ['coin']      // Only collide with 'coin' tagged entities
+});
 
-// Also available:
-sprite1.isAbove(sprite2);
-sprite1.distanceTo(sprite2);`,
+// Create collectible coin
+const coin = new Sprite({
+  x: 300, y: 150,
+  width: 30, height: 30,
+  color: '#f39c12',
+  radius: 15
+});
+coin.addTag('coin');
+
+// Listen for collision events
+player.on('collide', (event) => {
+  scene.remove(event.other);  // Remove the coin
+  console.log('Collected!');
+});
+
+// Also available for manual checking:
+if (sprite1.intersects(sprite2)) {
+  console.log('Manual collision check!');
+}`,
         init: (container) => {
           const game = new Game({
             parent: container,
@@ -1362,47 +1383,80 @@ sprite1.distanceTo(sprite2);`,
           });
 
           const scene = new Scene();
-          const s1 = new Sprite({
+
+          let score = 0;
+
+          const player = new Sprite({
             x: 150, y: 150,
-            width: 60, height: 60,
+            width: 50, height: 50,
             color: '#e94560',
             radius: 10,
-            interactive: true
+            interactive: true,
+            checkCollisions: true,
+            collisionTags: ['coin']
           });
 
-          const s2 = new Sprite({
-            x: 250, y: 150,
-            width: 60, height: 60,
-            color: '#4fc3f7',
-            radius: 10
-          });
-
-          const statusText = new Text({
-            text: 'Drag the red box',
+          const scoreText = new Text({
+            text: 'Score: 0',
             x: 200, y: 30,
             fontSize: 16,
+            color: '#4fc3f7',
+            align: 'center'
+          });
+
+          const instructions = new Text({
+            text: 'Drag player to collect coins',
+            x: 200, y: 270,
+            fontSize: 12,
             color: '#888',
             align: 'center'
           });
 
-          s1.on('drag', (event) => {
-            s1.x += event.delta.x;
-            s1.y += event.delta.y;
+          // Create coins
+          const coins = [];
+          for (let i = 0; i < 5; i++) {
+            const coin = new Sprite({
+              x: 100 + i * 60,
+              y: 80 + Math.random() * 140,
+              width: 25,
+              height: 25,
+              color: '#f39c12',
+              radius: 12.5
+            });
+            coin.addTag('coin');
+            coins.push(coin);
+            scene.add(coin);
+          }
 
-            if (s1.intersects(s2)) {
-              s2.color = '#2ecc71';
-              statusText.text = 'Collision detected!';
-              statusText.color = '#2ecc71';
-            } else {
-              s2.color = '#4fc3f7';
-              statusText.text = 'Drag the red box';
-              statusText.color = '#888';
+          // Listen for collisions
+          player.on('collide', (event) => {
+            const coin = event.other;
+            scene.remove(coin);
+            score++;
+            scoreText.text = `Score: ${score}`;
+
+            if (score === 5) {
+              scoreText.text = 'All collected! 🎉';
+              setTimeout(() => {
+                score = 0;
+                scoreText.text = 'Score: 0';
+                coins.forEach(coin => {
+                  coin.x = 100 + Math.random() * 200;
+                  coin.y = 80 + Math.random() * 140;
+                  scene.add(coin);
+                });
+              }, 2000);
             }
           });
 
-          scene.add(s1);
-          scene.add(s2);
-          scene.add(statusText);
+          player.on('drag', (event) => {
+            player.x += event.delta.x;
+            player.y += event.delta.y;
+          });
+
+          scene.add(player);
+          scene.add(scoreText);
+          scene.add(instructions);
           game.setScene(scene);
           game.start();
           return game;
@@ -2483,6 +2537,281 @@ async function example() {
           scene.add(counterText);
           scene.add(statusText);
           scene.add(button);
+          game.setScene(scene);
+          game.start();
+          return game;
+        }
+      },
+
+      canvasevents: {
+        title: 'Canvas Events',
+        description: 'Listen to pointer events on the canvas',
+        code: `// Canvas-level pointer events
+// Position is automatically converted to game coordinates!
+
+game.on('pointerdown', (event) => {
+  console.log('Pointer down at:', event.position);
+  // event.originalEvent contains the raw browser event
+});
+
+game.on('pointermove', (event) => {
+  console.log('Moving at:', event.position);
+});
+
+game.on('pointerup', (event) => {
+  console.log('Pointer up at:', event.position);
+});
+
+game.on('click', (event) => {
+  console.log('Clicked at:', event.position);
+});`,
+        init: (container) => {
+          const game = new Game({
+            parent: container,
+            width: 400,
+            height: 300,
+            backgroundColor: '#0f3460'
+          });
+
+          const scene = new Scene();
+
+          const title = new Text({
+            text: 'Canvas Pointer Events',
+            x: 200, y: 30,
+            fontSize: 18,
+            color: '#4fc3f7',
+            align: 'center'
+          });
+
+          const posText = new Text({
+            text: 'Click anywhere on the canvas',
+            x: 200, y: 150,
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+          });
+
+          const marker = new Sprite({
+            x: -100, y: -100,
+            width: 20, height: 20,
+            color: '#e94560',
+            radius: 10,
+            alpha: 0
+          });
+
+          // Listen to canvas events
+          game.on('pointerdown', (event) => {
+            marker.x = event.position.x;
+            marker.y = event.position.y;
+            marker.alpha = 1;
+            posText.text = `Click at (${Math.round(event.position.x)}, ${Math.round(event.position.y)})`;
+            posText.color = '#4fc3f7';
+
+            marker.tween(
+              { alpha: 0, scaleX: 2, scaleY: 2 },
+              { duration: 500, easing: Easing.easeOutQuad, onComplete: () => {
+                marker.scaleX = 1;
+                marker.scaleY = 1;
+              }}
+            );
+          });
+
+          game.on('pointermove', (event) => {
+            if (event.originalEvent.buttons > 0) {
+              // Dragging
+              posText.text = `Drag at (${Math.round(event.position.x)}, ${Math.round(event.position.y)})`;
+              posText.color = '#f39c12';
+            }
+          });
+
+          const instructions = new Text({
+            text: 'Events work with both mouse and touch',
+            x: 200, y: 270,
+            fontSize: 12,
+            color: '#666',
+            align: 'center'
+          });
+
+          scene.add(title);
+          scene.add(posText);
+          scene.add(marker);
+          scene.add(instructions);
+          game.setScene(scene);
+          game.start();
+          return game;
+        }
+      },
+
+      canvasgestures: {
+        title: 'Canvas Gestures',
+        description: 'Tap, swipe, drag, and long press on the canvas',
+        code: `// Canvas-level gesture events
+// Works just like entity gestures!
+
+game.on('tap', (event) => {
+  console.log('Canvas tapped at:', event.position);
+  // event.target is the entity if tapped on one, or null
+});
+
+game.on('swipe', (event) => {
+  console.log('Swiped:', event.direction);
+  console.log('Velocity:', event.velocity);
+  console.log('Distance:', event.distance);
+});
+
+game.on('drag', (event) => {
+  console.log('Dragging, delta:', event.delta);
+});
+
+game.on('dragstart', (event) => {
+  console.log('Drag started at:', event.position);
+});
+
+game.on('dragend', (event) => {
+  console.log('Drag ended at:', event.position);
+});
+
+game.on('longpress', (event) => {
+  console.log('Long pressed at:', event.position);
+});`,
+        init: (container) => {
+          const game = new Game({
+            parent: container,
+            width: 400,
+            height: 300,
+            backgroundColor: '#0f3460'
+          });
+
+          const scene = new Scene();
+
+          const title = new Text({
+            text: 'Canvas Gesture Events',
+            x: 200, y: 20,
+            fontSize: 18,
+            color: '#4fc3f7',
+            align: 'center'
+          });
+
+          const gestureText = new Text({
+            text: 'Try: tap, swipe, drag, long press',
+            x: 200, y: 150,
+            fontSize: 14,
+            color: '#888',
+            align: 'center'
+          });
+
+          const swipeIndicator = new Sprite({
+            x: 200, y: 150,
+            width: 60, height: 60,
+            color: '#16a085',
+            radius: 30,
+            alpha: 0
+          });
+
+          // Canvas tap
+          game.on('tap', (event) => {
+            gestureText.text = `Tap at (${Math.round(event.position.x)}, ${Math.round(event.position.y)})`;
+            gestureText.color = '#e94560';
+
+            const circle = new Sprite({
+              x: event.position.x,
+              y: event.position.y,
+              width: 10,
+              height: 10,
+              color: '#e94560',
+              radius: 5
+            });
+            scene.add(circle);
+
+            circle.tween(
+              { scaleX: 3, scaleY: 3, alpha: 0 },
+              { duration: 400, onComplete: () => scene.remove(circle) }
+            );
+          });
+
+          // Canvas swipe
+          game.on('swipe', (event) => {
+            gestureText.text = `Swipe ${event.direction}!`;
+            gestureText.color = '#4fc3f7';
+
+            swipeIndicator.x = event.position.x;
+            swipeIndicator.y = event.position.y;
+            swipeIndicator.alpha = 1;
+            swipeIndicator.scaleX = 1;
+            swipeIndicator.scaleY = 1;
+
+            swipeIndicator.tween(
+              { alpha: 0, scaleX: 2, scaleY: 2 },
+              { duration: 500 }
+            );
+          });
+
+          // Canvas drag
+          let dragTrail = [];
+          game.on('dragstart', (event) => {
+            gestureText.text = 'Dragging...';
+            gestureText.color = '#9b59b6';
+            dragTrail = [];
+          });
+
+          game.on('drag', (event) => {
+            const dot = new Sprite({
+              x: event.position.x,
+              y: event.position.y,
+              width: 5,
+              height: 5,
+              color: '#9b59b6',
+              radius: 2.5,
+              alpha: 0.8
+            });
+            scene.add(dot);
+            dragTrail.push(dot);
+
+            delay(500, () => {
+              dot.tween({ alpha: 0 }, { duration: 200, onComplete: () => scene.remove(dot) });
+            });
+          });
+
+          game.on('dragend', (event) => {
+            gestureText.text = 'Drag ended';
+            gestureText.color = '#888';
+          });
+
+          // Canvas long press
+          game.on('longpress', (event) => {
+            gestureText.text = 'Long press detected!';
+            gestureText.color = '#f39c12';
+
+            const burst = new ParticleEmitter({
+              x: event.position.x,
+              y: event.position.y,
+              rate: 0,
+              colors: ['#f39c12', '#e94560', '#4fc3f7'],
+              sizeRange: { min: 3, max: 6 },
+              lifetimeRange: { min: 0.5, max: 1 },
+              velocityRange: {
+                min: { x: -100, y: -100 },
+                max: { x: 100, y: 100 }
+              }
+            });
+            scene.add(burst);
+            burst.burst(20);
+
+            delay(1500, () => scene.remove(burst));
+          });
+
+          const instructions = new Text({
+            text: 'Canvas events: no need to make entities interactive!',
+            x: 200, y: 280,
+            fontSize: 11,
+            color: '#666',
+            align: 'center'
+          });
+
+          scene.add(title);
+          scene.add(gestureText);
+          scene.add(swipeIndicator);
+          scene.add(instructions);
           game.setScene(scene);
           game.start();
           return game;

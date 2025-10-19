@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zap - Gesture-First 2D Game Engine</title>
+  <meta name="description" content="A lightweight, gesture-first 2D game engine for creating interactive demos and playable ads. Built with TypeScript, zero dependencies.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --accent: #f093fb;
+      --dark: #1a202c;
+      --gray: #4a5568;
+      --light: #f7fafc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.8;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(255,255,255,0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Features Section */
+    .features {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .feature-card p {
+      color: var(--gray);
+      line-height: 1.6;
+    }
+
+    /* Code Example Section */
+    .code-section {
+      background: var(--light);
+      padding: 5rem 2rem;
+    }
+
+    .code-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .code-example {
+      background: var(--dark);
+      color: #e2e8f0;
+      padding: 2rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .code-example .comment { color: #718096; }
+    .code-example .keyword { color: #fc8181; }
+    .code-example .string { color: #68d391; }
+    .code-example .function { color: #63b3ed; }
+    .code-example .number { color: #f6ad55; }
+
+    /* Install Section */
+    .install-section {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .install-section h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .install-command {
+      background: rgba(0,0,0,0.3);
+      padding: 1.5rem;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .copy-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* Stats Section */
+    .stats {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 3rem;
+      text-align: center;
+    }
+
+    .stat h3 {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+    }
+
+    .stat p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    /* Demo Section */
+    .demo-section {
+      background: var(--light);
+      padding: 5rem 2rem;
+      text-align: center;
+    }
+
+    .demo-section h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+    }
+
+    .demo-section p {
+      font-size: 1.2rem;
+      color: var(--gray);
+      margin-bottom: 2rem;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <a href="#" class="logo">
+        <img src="https://raw.githubusercontent.com/Mode7Labs/zap/main/assets/logo.png" alt="Zap Logo">
+        <span>Zap</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="docs/">Documentation</a></li>
+        <li><a href="playground/">Playground</a></li>
+        <li><a href="https://github.com/Mode7Labs/zap" target="_blank">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/package/@mode-7/zap" target="_blank">NPM</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>⚡ Zap Game Engine</h1>
+    <p>A lightweight, gesture-first 2D game engine for creating interactive demos and playable ads</p>
+    <div class="cta-buttons">
+      <a href="docs/" class="btn btn-primary">Get Started</a>
+      <a href="playground/" class="btn btn-secondary">Try Playground</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <h2 class="section-title">Built for Interactivity</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">👆</div>
+        <h3>Gesture-First Design</h3>
+        <p>Built-in tap, swipe, drag, and long-press recognition. Perfect for mobile games and interactive ads.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <h3>Smooth Animations</h3>
+        <p>Powerful tweening system with 30+ easing functions. Make everything feel responsive and polished.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🪶</div>
+        <h3>Lightweight</h3>
+        <p>Zero dependencies, ~15KB minified + gzipped. Tree-shakeable ES modules for minimal bundle size.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📘</div>
+        <h3>TypeScript Native</h3>
+        <p>Full type safety and IntelliSense support. Written in TypeScript from the ground up.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3>Google Fonts Integration</h3>
+        <p>Dynamically load any Google Font. Beautiful typography with zero configuration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Collision Detection</h3>
+        <p>Built-in position and overlap detection. Perfect for match-3 games and interactive elements.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Code Example -->
+  <section class="code-section">
+    <div class="code-container">
+      <h2 class="section-title">Simple to Use</h2>
+      <pre class="code-example"><span class="keyword">import</span> { Game, Scene, Sprite } <span class="keyword">from</span> <span class="string">'@mode-7/zap'</span>;
+
+<span class="comment">// Create a game</span>
+<span class="keyword">const</span> game = <span class="keyword">new</span> <span class="function">Game</span>({
+  width: <span class="number">800</span>,
+  height: <span class="number">600</span>,
+  backgroundColor: <span class="string">'#0f3460'</span>
+});
+
+<span class="comment">// Create a scene</span>
+<span class="keyword">const</span> scene = <span class="keyword">new</span> <span class="function">Scene</span>();
+
+<span class="comment">// Create an interactive card</span>
+<span class="keyword">const</span> card = <span class="keyword">new</span> <span class="function">Sprite</span>({
+  x: <span class="number">400</span>,
+  y: <span class="number">300</span>,
+  width: <span class="number">100</span>,
+  height: <span class="number">140</span>,
+  color: <span class="string">'#e94560'</span>,
+  interactive: <span class="keyword">true</span>,
+});
+
+<span class="comment">// Add tap interaction</span>
+card.<span class="function">on</span>(<span class="string">'tap'</span>, () => {
+  card.<span class="function">tween</span>(
+    { rotation: Math.PI, scaleX: <span class="number">1.2</span>, scaleY: <span class="number">1.2</span> },
+    { duration: <span class="number">300</span>, easing: <span class="string">'easeOutBack'</span> }
+  );
+});
+
+<span class="comment">// Add to scene and start</span>
+scene.<span class="function">add</span>(card);
+game.<span class="function">setScene</span>(scene);
+game.<span class="function">start</span>();</pre>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="install-section">
+    <h2>Get Started in Seconds</h2>
+    <div class="install-command">
+      <span id="install-cmd">npm install @mode-7/zap</span>
+      <button class="copy-btn" onclick="copyInstall()">Copy</button>
+    </div>
+    <div class="cta-buttons">
+      <a href="docs/" class="btn btn-primary">View Documentation</a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats">
+    <div class="stat">
+      <h3>~15KB</h3>
+      <p>Minified + Gzipped</p>
+    </div>
+    <div class="stat">
+      <h3>0</h3>
+      <p>Dependencies</p>
+    </div>
+    <div class="stat">
+      <h3>30+</h3>
+      <p>Easing Functions</p>
+    </div>
+    <div class="stat">
+      <h3>100%</h3>
+      <p>TypeScript</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Made with ❤️ in Tokyo</p>
+    <p style="margin-top: 0.5rem; opacity: 0.7;">
+      <a href="https://github.com/Mode7Labs/zap">GitHub</a> •
+      <a href="https://www.npmjs.com/package/@mode-7/zap">NPM</a> •
+      <a href="docs/">Documentation</a> •
+      <a href="playground/">Playground</a>
+    </p>
+    <p style="margin-top: 1rem; opacity: 0.5; font-size: 0.9rem;">MIT License</p>
+  </footer>
+
+  <script>
+    function copyInstall() {
+      const text = document.getElementById('install-cmd').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 import type { Game } from './Game';
 import { EventEmitter } from './EventEmitter';
 import type { Entity } from '../entities/Entity';
+import { Sprite } from '../entities/Sprite';
 import { delay, interval, type TimerHandle } from '../utils/timer';
+import type { SceneOptions } from '../types';
 
 /**
  * Scene manages a collection of entities
@@ -11,6 +13,13 @@ export class Scene extends EventEmitter {
   private entities: Entity[] = [];
   private sortRequired: boolean = false;
   private timers: TimerHandle[] = [];
+  private backgroundSprite: Sprite | null = null;
+  private options: SceneOptions;
+
+  constructor(options: SceneOptions = {}) {
+    super();
+    this.options = options;
+  }
 
   /**
    * Called when scene becomes active
@@ -31,6 +40,20 @@ export class Scene extends EventEmitter {
    */
   setGame(game: Game): void {
     this.game = game;
+
+    // Create background sprite if backgroundImage or backgroundColor is provided
+    if ((this.options.backgroundImage || this.options.backgroundColor) && !this.backgroundSprite) {
+      this.backgroundSprite = new Sprite({
+        x: game.width / 2,
+        y: game.height / 2,
+        width: game.width,
+        height: game.height,
+        color: this.options.backgroundColor,
+        image: this.options.backgroundImage,
+        zIndex: -1000
+      });
+      this.add(this.backgroundSprite);
+    }
   }
 
   /**
@@ -109,7 +132,34 @@ export class Scene extends EventEmitter {
       }
     }
 
+    // Check collisions for entities that have collision checking enabled
+    this.checkCollisions();
+
     this.emit('update', deltaTime);
+  }
+
+  /**
+   * Check collisions between all entities that have collision checking enabled
+   */
+  private checkCollisions(): void {
+    const collidableEntities = this.entities.filter(e => e.checkCollisions && e.active);
+
+    for (let i = 0; i < collidableEntities.length; i++) {
+      const entity = collidableEntities[i];
+
+      // Check against all other entities
+      for (let j = 0; j < this.entities.length; j++) {
+        const other = this.entities[j];
+
+        // Don't check against self
+        if (entity === other) continue;
+
+        // Don't check if other is not active
+        if (!other.active) continue;
+
+        entity.checkCollision(other);
+      }
+    }
   }
 
   /**

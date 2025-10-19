@@ -34,6 +34,11 @@ export class Entity extends EventEmitter {
   public interactive: boolean = false;
   public zIndex: number = 0;
 
+  // Collision
+  public checkCollisions: boolean = false;
+  public collisionTags: string[] = [];
+  private collidingWith: Set<Entity> = new Set();
+
   // Tags for grouping
   private tags: Set<string> = new Set();
 
@@ -53,8 +58,11 @@ export class Entity extends EventEmitter {
     this.height = options.height ?? 0;
     this.anchorX = options.anchorX ?? 0.5;
     this.anchorY = options.anchorY ?? 0.5;
+    this.zIndex = options.zIndex ?? 0;
     this.interactive = options.interactive ?? false;
     this.visible = options.visible ?? true;
+    this.checkCollisions = options.checkCollisions ?? false;
+    this.collisionTags = options.collisionTags ?? [];
   }
 
   /**
@@ -220,38 +228,37 @@ export class Entity extends EventEmitter {
   }
 
   /**
-   * Check if this entity is above another (lower y value)
+   * Check collision with another entity and emit events
    */
-  isAbove(other: Entity): boolean {
-    return this.getWorldPosition().y < other.getWorldPosition().y;
+  checkCollision(other: Entity): void {
+    if (!this.active || !other.active) return;
+    if (!this.checkCollisions) return;
+
+    // Skip if filtering by tags and other doesn't have any matching tags
+    if (this.collisionTags.length > 0) {
+      const hasMatchingTag = this.collisionTags.some(tag => other.hasTag(tag));
+      if (!hasMatchingTag) return;
+    }
+
+    const isColliding = this.intersects(other);
+
+    if (isColliding && !this.collidingWith.has(other)) {
+      // New collision started
+      this.collidingWith.add(other);
+      this.emit('collide', { other });
+      this.emit('collisionenter', { other });
+    } else if (!isColliding && this.collidingWith.has(other)) {
+      // Collision ended
+      this.collidingWith.delete(other);
+      this.emit('collisionexit', { other });
+    }
   }
 
   /**
-   * Check if this entity is below another (higher y value)
+   * Get all entities currently colliding with this one
    */
-  isBelow(other: Entity): boolean {
-    return this.getWorldPosition().y > other.getWorldPosition().y;
-  }
-
-  /**
-   * Check if this entity is to the left of another
-   */
-  isLeftOf(other: Entity): boolean {
-    return this.getWorldPosition().x < other.getWorldPosition().x;
-  }
-
-  /**
-   * Check if this entity is to the right of another
-   */
-  isRightOf(other: Entity): boolean {
-    return this.getWorldPosition().x > other.getWorldPosition().x;
-  }
-
-  /**
-   * Check if this entity overlaps with another (considers size)
-   */
-  overlaps(other: Entity): boolean {
-    return this.intersects(other);
+  getCollisions(): Entity[] {
+    return Array.from(this.collidingWith);
   }
 
   /**
@@ -274,25 +281,44 @@ export class Entity extends EventEmitter {
   render(ctx: CanvasRenderingContext2D): void {
     if (!this.visible) return;
 
-    ctx.save();
+    // PERFORMANCE: Only save/restore if we actually need to transform
+    const hasTransform = this.x !== 0 || this.y !== 0 || this.rotation !== 0 ||
+                        this.scaleX !== 1 || this.scaleY !== 1 || this.alpha !== 1 ||
+                        this.children.length > 0;
 
-    // Apply local transform only (parent transform already applied if this is a child)
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.rotation);
-    ctx.scale(this.scaleX, this.scaleY);
-    ctx.globalAlpha *= this.alpha;
+    if (hasTransform) {
+      ctx.save();
+
+      // Apply local transform only (parent transform already applied if this is a child)
+      if (this.x !== 0 || this.y !== 0) {
+        ctx.translate(this.x, this.y);
+      }
+      if (this.rotation !== 0) {
+        ctx.rotate(this.rotation);
+      }
+      if (this.scaleX !== 1 || this.scaleY !== 1) {
+        ctx.scale(this.scaleX, this.scaleY);
+      }
+      if (this.alpha !== 1) {
+        ctx.globalAlpha *= this.alpha;
+      }
+    }
 
     // Render self (override in subclasses)
     this.draw(ctx);
 
     // Render children (they will apply their own transforms)
-    for (const child of this.children) {
-      if (child.visible) {
-        child.render(ctx);
+    if (this.children.length > 0) {
+      for (const child of this.children) {
+        if (child.visible) {
+          child.render(ctx);
+        }
       }
     }
 
-    ctx.restore();
+    if (hasTransform) {
+      ctx.restore();
+    }
   }
 
   /**

@@ -28,6 +28,7 @@ export interface GameOptions {
   canvas?: HTMLCanvasElement;
   parent?: HTMLElement | string;
   backgroundColor?: string;
+  responsive?: boolean;
 
   // Rendering Quality
   pixelRatio?: number;
@@ -50,19 +51,37 @@ export interface GameOptions {
   debug?: boolean;
 }
 
+export interface SceneOptions {
+  backgroundColor?: string;
+  backgroundImage?: string | HTMLImageElement;
+}
+
 export interface EntityOptions extends Partial<Transform> {
   width?: number;
   height?: number;
   anchorX?: number;
   anchorY?: number;
+  zIndex?: number;
   interactive?: boolean;
   visible?: boolean;
+  checkCollisions?: boolean;
+  collisionTags?: string[];
+}
+
+export interface Animation {
+  frames: number[];
+  fps?: number;
+  loop?: boolean;
 }
 
 export interface SpriteOptions extends EntityOptions {
   color?: string;
   image?: HTMLImageElement | string;
   radius?: number;
+  // Animation support (optional)
+  frameWidth?: number;
+  frameHeight?: number;
+  animations?: Record<string, Animation>;
 }
 
 export interface TextOptions extends EntityOptions {
@@ -98,3 +117,7 @@ export interface GestureEvent {
 }
 
 export type EventCallback<T = any> = (data: T) => void;
+
+export interface CollisionEvent {
+  other: any; // Entity type - using any to avoid circular dependency
+}

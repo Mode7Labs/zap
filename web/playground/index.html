@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zap Playground</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1>⚡ Zap Playground</h1>
+    <div class="header-actions">
+      <span id="ai-indicator">AI: Not configured</span>
+      <button class="btn" onclick="openSettings()">⚙️ Settings</button>
+      <button class="btn" onclick="window.open('../docs/index.html')">📚 Docs</button>
+      <button class="btn" onclick="window.open('../index.html')">← Home</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <div class="setting-group">
+        <label>OpenAI API Key</label>
+        <input type="password" id="api-key-input" placeholder="sk-...">
+        <p class="hint">
+          Your API key is stored locally. <a href="https://platform.openai.com/api-keys" target="_blank">Get an API key</a>
+        </p>
+      </div>
+      <div class="setting-group">
+        <label>Model</label>
+        <select id="model-select">
+          <option value="gpt-5">GPT-5 (Most capable)</option>
+          <option value="gpt-5-mini">GPT-5 Mini (Balanced)</option>
+          <option value="gpt-5-nano">GPT-5 Nano (Fast & efficient)</option>
+        </select>
+        <p class="hint">
+          Choose the AI model for code generation
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Sidebar with Examples -->
+    <div class="sidebar">
+      <h3>Examples</h3>
+      <div class="example" data-example="default">Default</div>
+      <div class="example" data-example="basic">Basic Sprite</div>
+      <div class="example" data-example="circle">Circle</div>
+      <div class="example" data-example="animation">Animation</div>
+      <div class="example" data-example="interactive">Interactive</div>
+      <div class="example" data-example="particles">Particles</div>
+      <div class="example" data-example="game">Mini Game</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+      <!-- Editor & Preview -->
+      <div class="editor-container">
+        <div class="editor-panel">
+          <div class="panel-header">Code Editor</div>
+          <div id="editor-wrapper">
+            <textarea id="code"></textarea>
+          </div>
+        </div>
+        <div class="editor-panel">
+          <div class="panel-header">Live Preview</div>
+          <iframe id="preview"></iframe>
+        </div>
+      </div>
+
+      <!-- AI Panel -->
+      <div class="ai-panel">
+        <div class="ai-input-container">
+          <input
+            type="text"
+            id="ai-prompt"
+            class="ai-input"
+            placeholder="Describe what you want to build... (e.g., 'add a red circle that bounces')"
+            onkeypress="if(event.key==='Enter')generateCode()"
+          />
+          <button class="btn btn-ai" id="ai-generate-btn" onclick="generateCode()">🤖 Generate</button>
+        </div>
+        <div class="ai-meta">
+          <div id="ai-status" class="ai-status"></div>
+          <button class="btn-text" id="clear-history-btn" onclick="clearAIHistory()" title="Clear conversation history">
+            🗑️ Clear history (<span id="history-count">0</span>)
+          </button>
+        </div>
+        <div id="ai-disclaimer" class="ai-disclaimer">⚡ The AI editor is in early access - please review all generated code carefully!</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

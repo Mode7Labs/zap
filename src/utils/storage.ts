@@ -6,21 +6,21 @@ const PREFIX = 'zap_';
 
 export class Storage {
   /**
-   * Save data to local storage
+   * Set data in local storage
    */
-  static save<T>(key: string, data: T): void {
+  static set<T>(key: string, data: T): void {
     try {
       const serialized = JSON.stringify(data);
       localStorage.setItem(PREFIX + key, serialized);
     } catch (error) {
-      console.error('Failed to save to storage:', error);
+      console.error('Failed to set storage:', error);
     }
   }
 
   /**
-   * Load data from local storage
+   * Get data from local storage
    */
-  static load<T>(key: string, defaultValue?: T): T | null {
+  static get<T>(key: string, defaultValue?: T): T | null {
     try {
       const serialized = localStorage.getItem(PREFIX + key);
       if (serialized === null) {
@@ -28,7 +28,7 @@ export class Storage {
       }
       return JSON.parse(serialized) as T;
     } catch (error) {
-      console.error('Failed to load from storage:', error);
+      console.error('Failed to get from storage:', error);
       return defaultValue ?? null;
     }
   }

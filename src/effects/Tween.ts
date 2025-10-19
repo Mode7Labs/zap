@@ -104,4 +104,18 @@ export class Tween<T extends Record<string, any>> {
   isActive(): boolean {
     return this.active && !this.completed;
   }
+
+  /**
+   * Promise-like interface for chaining
+   */
+  then(onComplete?: () => void): Tween<T> {
+    if (onComplete) {
+      const existingCallback = this.onComplete;
+      this.onComplete = () => {
+        if (existingCallback) existingCallback();
+        onComplete();
+      };
+    }
+    return this;
+  }
 }

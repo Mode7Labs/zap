@@ -1,19 +1,40 @@
-import type { SpriteOptions } from '../types';
+import type { SpriteOptions, Animation } from '../types';
 import { Entity } from './Entity';
 
 /**
- * Sprite entity for rendering images or colored rectangles
+ * Sprite entity for rendering images, colored rectangles, and sprite sheet animations
  */
 export class Sprite extends Entity {
   public color: string | null = null;
   public image: HTMLImageElement | null = null;
   public radius: number = 0;
 
+  // Animation support (optional)
+  public frameWidth?: number;
+  public frameHeight?: number;
+  private animations: Map<string, Animation> = new Map();
+  private currentAnimation: string | null = null;
+  private currentFrame: number = 0;
+  private frameTime: number = 0;
+  private frameDuration: number = 100; // ms per frame
+  private isPlaying: boolean = false;
+  private loop: boolean = true;
+
   constructor(options: SpriteOptions = {}) {
     super(options);
 
     this.color = options.color ?? null;
     this.radius = options.radius ?? 0;
+
+    // Animation setup (optional)
+    this.frameWidth = options.frameWidth;
+    this.frameHeight = options.frameHeight;
+
+    if (options.animations) {
+      Object.entries(options.animations).forEach(([name, anim]) => {
+        this.addAnimation(name, anim);
+      });
+    }
 
     if (options.image) {
       if (typeof options.image === 'string') {
@@ -43,6 +64,83 @@ export class Sprite extends Entity {
   }
 
   /**
+   * Add an animation
+   */
+  addAnimation(name: string, animation: Animation): void {
+    this.animations.set(name, animation);
+  }
+
+  /**
+   * Play an animation
+   */
+  play(name: string, options: { fps?: number; loop?: boolean } = {}): void {
+    const animation = this.animations.get(name);
+    if (!animation) {
+      console.warn(`Animation "${name}" not found`);
+      return;
+    }
+
+    this.currentAnimation = name;
+    this.currentFrame = 0;
+    this.frameTime = 0;
+    this.isPlaying = true;
+    this.loop = options.loop ?? animation.loop ?? true;
+
+    const fps = options.fps ?? animation.fps ?? 10;
+    this.frameDuration = 1000 / fps;
+  }
+
+  /**
+   * Stop animation
+   */
+  stop(): void {
+    this.isPlaying = false;
+  }
+
+  /**
+   * Pause animation
+   */
+  pause(): void {
+    this.isPlaying = false;
+  }
+
+  /**
+   * Resume animation
+   */
+  resume(): void {
+    this.isPlaying = true;
+  }
+
+  /**
+   * Update animation (called by scene)
+   */
+  update(deltaTime: number): void {
+    super.update(deltaTime);
+
+    if (!this.isPlaying || !this.currentAnimation) return;
+
+    const animation = this.animations.get(this.currentAnimation);
+    if (!animation) return;
+
+    this.frameTime += deltaTime * 1000;
+
+    if (this.frameTime >= this.frameDuration) {
+      this.frameTime -= this.frameDuration;
+      this.currentFrame++;
+
+      if (this.currentFrame >= animation.frames.length) {
+        if (this.loop) {
+          this.currentFrame = 0;
+        } else {
+          this.currentFrame = animation.frames.length - 1;
+          this.isPlaying = false;
+          this.emit('animationcomplete', this.currentAnimation);
+        }
+      }
+    }
+  }
+
+  /**
    * Draw the sprite
    */
   protected draw(ctx: CanvasRenderingContext2D): void {
@@ -50,25 +148,39 @@ export class Sprite extends Entity {
     const offsetY = -this.height * this.anchorY;
 
     if (this.image) {
-      // Draw image with optional circular clipping
-      if (this.radius > 0 && this.isCircle()) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
-        ctx.restore();
-      } else {
-        ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+      // If frameWidth/frameHeight are defined, this is a sprite sheet
+      // Only render if an animation is active
+      if (this.frameWidth && this.frameHeight) {
+        if (!this.currentAnimation) {
+          // Don't render anything if no animation is playing yet
+          return;
+        }
+
+        const animation = this.animations.get(this.currentAnimation);
+        if (animation) {
+          const frameIndex = animation.frames[this.currentFrame];
+          const framesPerRow = Math.floor(this.image.width / this.frameWidth);
+          const frameX = (frameIndex % framesPerRow) * this.frameWidth;
+          const frameY = Math.floor(frameIndex / framesPerRow) * this.frameHeight;
+
+          ctx.drawImage(
+            this.image,
+            frameX, frameY,
+            this.frameWidth, this.frameHeight,
+            offsetX, offsetY,
+            this.width, this.height
+          );
+        }
+        // Don't fall through - sprite sheets should only render via animations
+        return;
       }
+
+      // Draw full image (for non-animated sprites only)
+      ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
     } else if (this.color) {
       ctx.fillStyle = this.color;
 
-      if (this.radius > 0 && this.isCircle()) {
-        // Draw circle
-        this.drawCircle(ctx);
-      } else if (this.radius > 0) {
+      if (this.radius > 0) {
         // Draw rounded rectangle
         this.drawRoundedRect(ctx, offsetX, offsetY, this.width, this.height, this.radius);
       } else {
@@ -76,23 +188,6 @@ export class Sprite extends Entity {
         ctx.fillRect(offsetX, offsetY, this.width, this.height);
       }
     }
-  }
-
-  /**
-   * Check if this sprite should be rendered as a circle
-   */
-  private isCircle(): boolean {
-    return this.width === this.height && this.radius * 2 === this.width;
-  }
-
-  /**
-   * Draw a circle
-   */
-  private drawCircle(ctx: CanvasRenderingContext2D): void {
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.fill();
   }
 
   /**

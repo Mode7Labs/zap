@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demos - Zap Game Engine</title>
+  <meta name="description" content="Interactive demos and example games built with the Zap game engine.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --secondary: #764ba2;
+      --accent: #f093fb;
+      --dark: #1a202c;
+      --gray: #4a5568;
+      --light: #f7fafc;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: white;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .nav-links a:hover {
+      opacity: 0.8;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      opacity: 0.95;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Demos Grid */
+    .demos-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .demos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+
+    .demo-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .demo-preview {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demo-preview::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+
+    .demo-content {
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .demo-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .demo-card p {
+      color: var(--gray);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      flex: 1;
+    }
+
+    .demo-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag {
+      background: var(--light);
+      color: var(--gray);
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .demo-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--light);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .demos-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .demo-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <a href="index.html" class="logo">
+        <img src="https://raw.githubusercontent.com/Mode7Labs/zap/main/assets/logo.png" alt="Zap Logo">
+        <span>Zap</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="documentation.html">Documentation</a></li>
+        <li><a href="playground.html">Playground</a></li>
+        <li><a href="demos.html">Demos</a></li>
+        <li><a href="https://github.com/Mode7Labs/zap" target="_blank">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/package/@mode-7/zap" target="_blank">NPM</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Interactive Demos</h1>
+    <p>Explore games and interactive experiences built with Zap</p>
+  </section>
+
+  <!-- Demos Grid -->
+  <section class="demos-section">
+    <div class="demos-grid">
+      <div class="demo-card">
+        <div class="demo-preview">
+          <span style="font-size: 5rem;">🔵</span>
+          <span style="font-size: 5rem; margin-left: -1rem;">🟢</span>
+          <span style="font-size: 5rem; margin-left: -1rem;">🔴</span>
+        </div>
+        <div class="demo-content">
+          <h3>Color Match</h3>
+          <p>Swipe to connect 3 or more matching circles and build combos. A match-3 style puzzle game showcasing Zap's gesture recognition and tween animations.</p>
+          <div class="demo-tags">
+            <span class="tag">Gestures</span>
+            <span class="tag">Animations</span>
+            <span class="tag">Puzzle</span>
+          </div>
+          <div class="demo-actions">
+            <a href="demo-game.html" class="btn btn-primary">Play Demo</a>
+            <a href="https://github.com/Mode7Labs/zap/blob/main/docs/demo-game.html" class="btn btn-secondary" target="_blank">View Code</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-preview" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+          <span style="font-size: 5rem;">⚡</span>
+          <span style="font-size: 3rem; margin-left: -0.5rem;">💥</span>
+        </div>
+        <div class="demo-content">
+          <h3>Stress Test</h3>
+          <p>Click to spawn 100 sprites with physics simulation. Watch performance with live FPS and sprite counter as thousands of objects animate simultaneously.</p>
+          <div class="demo-tags">
+            <span class="tag">Performance</span>
+            <span class="tag">Physics</span>
+            <span class="tag">Particles</span>
+          </div>
+          <div class="demo-actions">
+            <a href="stress-test.html" class="btn btn-primary">Try Stress Test</a>
+            <a href="https://github.com/Mode7Labs/zap/blob/main/docs/stress-test.html" class="btn btn-secondary" target="_blank">View Code</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Placeholder for future demos -->
+      <div class="demo-card" style="opacity: 0.6; pointer-events: none;">
+        <div class="demo-preview" style="background: linear-gradient(135deg, #374151 0%, #6b7280 100%);">
+          <span style="font-size: 5rem; opacity: 0.3;">⭐</span>
+        </div>
+        <div class="demo-content">
+          <h3>Coming Soon</h3>
+          <p>More interactive demos and example games are on the way. Check back soon!</p>
+          <div class="demo-tags">
+            <span class="tag">TBA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Made with ❤️ in Tokyo</p>
+    <p style="margin-top: 0.5rem; opacity: 0.7;">
+      <a href="https://github.com/Mode7Labs/zap">GitHub</a> •
+      <a href="https://www.npmjs.com/package/@mode-7/zap">NPM</a> •
+      <a href="documentation.html">Documentation</a> •
+      <a href="playground.html">Playground</a>
+    </p>
+    <p style="margin-top: 1rem; opacity: 0.5; font-size: 0.9rem;">MIT License</p>
+  </footer>
+</body>
+</html>

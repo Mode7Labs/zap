@@ -113,11 +113,6 @@ export const Easing = {
       ? (1 - Easing.easeOutBounce(1 - 2 * t)) / 2
       : (1 + Easing.easeOutBounce(2 * t - 1)) / 2;
   },
-
-  // Shortcuts
-  easeIn: (t: number): number => Easing.easeInQuad(t),
-  easeOut: (t: number): number => Easing.easeOutQuad(t),
-  easeInOut: (t: number): number => Easing.easeInOutQuad(t),
 };
 
 export type EasingName = keyof typeof Easing;

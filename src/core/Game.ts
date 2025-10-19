@@ -40,6 +40,10 @@ export class Game extends EventEmitter {
   private fpsFrames: number = 0;
   private fpsLastTime: number = 0;
 
+  // Responsive
+  private responsive: boolean = false;
+  private resizeObserver: ResizeObserver | null = null;
+
   constructor(options: GameOptions = {}) {
     super();
 
@@ -51,6 +55,7 @@ export class Game extends EventEmitter {
     this.targetFPS = options.targetFPS ?? null;
     this.maxDeltaTime = options.maxDeltaTime ?? 0.1;
     this.showFPS = options.showFPS ?? false;
+    this.responsive = options.responsive ?? false;
 
     if (this.targetFPS !== null) {
       this.frameTime = 1000 / this.targetFPS;
@@ -105,6 +110,39 @@ export class Game extends EventEmitter {
         }
       });
     }
+
+    // Setup canvas-level pointer events
+    this.setupCanvasPointerEvents();
+
+    // Setup responsive canvas if enabled
+    if (this.responsive) {
+      this.setupResponsiveCanvas();
+    }
+  }
+
+  /**
+   * Setup pointer event listeners for the canvas
+   */
+  private setupCanvasPointerEvents(): void {
+    this.canvas.addEventListener('pointerdown', (e) => {
+      const pos = this.canvasToGame(e.clientX, e.clientY);
+      this.emit('pointerdown', { position: pos, originalEvent: e });
+    });
+
+    this.canvas.addEventListener('pointermove', (e) => {
+      const pos = this.canvasToGame(e.clientX, e.clientY);
+      this.emit('pointermove', { position: pos, originalEvent: e });
+    });
+
+    this.canvas.addEventListener('pointerup', (e) => {
+      const pos = this.canvasToGame(e.clientX, e.clientY);
+      this.emit('pointerup', { position: pos, originalEvent: e });
+    });
+
+    this.canvas.addEventListener('click', (e) => {
+      const pos = this.canvasToGame(e.clientX, e.clientY);
+      this.emit('click', { position: pos, originalEvent: e });
+    });
   }
 
   /**
@@ -314,10 +352,89 @@ export class Game extends EventEmitter {
   }
 
   /**
+   * Setup responsive canvas
+   */
+  private setupResponsiveCanvas(): void {
+    const parent = this.canvas.parentElement;
+    if (!parent) {
+      console.warn('Canvas has no parent element, responsive mode disabled');
+      return;
+    }
+
+    // Create ResizeObserver to watch parent size changes
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateCanvasSize();
+    });
+
+    this.resizeObserver.observe(parent);
+
+    // Set initial size
+    this.updateCanvasSize();
+  }
+
+  /**
+   * Update canvas size to fit parent while maintaining aspect ratio
+   */
+  private updateCanvasSize(): void {
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+
+    const parentWidth = parent.clientWidth;
+    const parentHeight = parent.clientHeight;
+    const designRatio = this.width / this.height;
+    const parentRatio = parentWidth / parentHeight;
+
+    let displayWidth: number;
+    let displayHeight: number;
+
+    // Letterbox mode - fit canvas in parent, maintain aspect ratio
+    if (parentRatio > designRatio) {
+      // Parent is wider - fit to height, add side bars
+      displayHeight = parentHeight;
+      displayWidth = parentHeight * designRatio;
+    } else {
+      // Parent is taller - fit to width, add top/bottom bars
+      displayWidth = parentWidth;
+      displayHeight = parentWidth / designRatio;
+    }
+
+    // Update CSS display size (this is what the user sees)
+    this.canvas.style.width = `${displayWidth}px`;
+    this.canvas.style.height = `${displayHeight}px`;
+
+    // Canvas buffer size stays at design resolution
+    // (already set in constructor, no need to change)
+
+    // Emit resize event
+    this.emit('resize', {
+      displayWidth,
+      displayHeight,
+      designWidth: this.width,
+      designHeight: this.height
+    });
+  }
+
+  /**
+   * Manually trigger a canvas resize
+   */
+  public resize(): void {
+    if (this.responsive) {
+      this.updateCanvasSize();
+    }
+  }
+
+  /**
    * Destroy the game instance
    */
   destroy(): void {
     this.stop();
+
+    // Cleanup ResizeObserver
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
     if (this.currentScene) {
       this.currentScene.destroy();
     }
