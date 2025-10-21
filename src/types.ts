@@ -77,6 +77,10 @@ export interface Animation {
 export interface SpriteOptions extends EntityOptions {
   color?: string;
   image?: HTMLImageElement | string;
+  /**
+   * Corner radius for rounded rectangles. When set to at least half of the sprite's
+   * smaller dimension (within a small tolerance), the sprite renders as a perfect circle.
+  */
   radius?: number;
   // Animation support (optional)
   frameWidth?: number;

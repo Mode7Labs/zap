@@ -146,6 +146,7 @@ export class Sprite extends Entity {
   protected draw(ctx: CanvasRenderingContext2D): void {
     const offsetX = -this.width * this.anchorX;
     const offsetY = -this.height * this.anchorY;
+    const circleRadius = this.getCircleRadius();
 
     if (this.image) {
       // If frameWidth/frameHeight are defined, this is a sprite sheet
@@ -173,7 +174,8 @@ export class Sprite extends Entity {
               this.width, this.height
             ),
             offsetX,
-            offsetY
+            offsetY,
+            circleRadius
           );
         }
         // Don't fall through - sprite sheets should only render via animations
@@ -185,19 +187,62 @@ export class Sprite extends Entity {
         ctx,
         () => ctx.drawImage(this.image as HTMLImageElement, offsetX, offsetY, this.width, this.height),
         offsetX,
-        offsetY
+        offsetY,
+        circleRadius
       );
     } else if (this.color) {
       ctx.fillStyle = this.color;
 
       if (this.radius > 0) {
-        // Draw rounded rectangle
-        this.drawRoundedRect(ctx, offsetX, offsetY, this.width, this.height, this.radius);
+        if (circleRadius !== null) {
+          const circleCenterX = offsetX + this.width / 2;
+          const circleCenterY = offsetY + this.height / 2;
+          this.drawCircle(ctx, circleCenterX, circleCenterY, circleRadius);
+        } else {
+          // Draw rounded rectangle
+          this.drawRoundedRect(ctx, offsetX, offsetY, this.width, this.height, this.radius);
+        }
       } else {
         // Draw rectangle
         ctx.fillRect(offsetX, offsetY, this.width, this.height);
       }
     }
+  }
+
+  /**
+   * Determine if the sprite should render as a perfect circle and return the circle radius.
+   */
+  private getCircleRadius(): number | null {
+    if (this.radius <= 0 || this.width <= 0 || this.height <= 0) {
+      return null;
+    }
+
+    const minDimension = Math.min(this.width, this.height);
+    const sizeTolerance = Math.max(1, minDimension * 0.01);
+
+    if (Math.abs(this.width - this.height) > sizeTolerance) {
+      return null;
+    }
+
+    const requiredRadius = minDimension / 2;
+    if (this.radius + sizeTolerance < requiredRadius) {
+      return null;
+    }
+
+    return requiredRadius;
+  }
+
+  /**
+   * Draw a filled circle (used when we need a perfect circle).
+   */
+  private drawCircle(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): void {
+    this.createCirclePath(ctx, centerX, centerY, radius);
+    ctx.fill();
   }
 
   /**
@@ -219,11 +264,19 @@ export class Sprite extends Entity {
     ctx: CanvasRenderingContext2D,
     drawFn: () => void,
     offsetX: number,
-    offsetY: number
+    offsetY: number,
+    circleRadius: number | null
   ): void {
     if (this.radius > 0) {
       ctx.save();
-      this.createRoundedRectPath(ctx, offsetX, offsetY, this.width, this.height, this.radius);
+      const circleCenterX = offsetX + this.width / 2;
+      const circleCenterY = offsetY + this.height / 2;
+      if (circleRadius !== null) {
+        this.createCirclePath(ctx, circleCenterX, circleCenterY, circleRadius);
+      } else {
+        // Draw rounded rectangle
+        this.createRoundedRectPath(ctx, offsetX, offsetY, this.width, this.height, this.radius);
+      }
       ctx.clip();
       drawFn();
       ctx.restore();
@@ -231,6 +284,17 @@ export class Sprite extends Entity {
     }
 
     drawFn();
+  }
+
+  private createCirclePath(
+    ctx: CanvasRenderingContext2D,
+    centerX: number,
+    centerY: number,
+    radius: number
+  ): void {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.closePath();
   }
 
   private createRoundedRectPath(
