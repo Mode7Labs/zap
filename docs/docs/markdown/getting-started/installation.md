@@ -33,7 +33,7 @@ For quick prototyping or simple projects, you can use Zap directly from a CDN:
 </head>
 <body>
   <script type="module">
-    import { Game, Scene, Sprite } from 'https://esm.sh/@mode-7/zap@0.1.2';
+    import { Game, Scene, Sprite } from 'https://esm.sh/@mode-7/zap@0.1.4';
 
     const game = new Game({ width: 800, height: 600 });
     const scene = new Scene();

@@ -89,7 +89,7 @@ try {
   const docs = buildDocsIndex();
 
   const output = {
-    version: '0.1.3',
+    version: '0.1.4',
     generated: new Date().toISOString(),
     repository: 'https://github.com/Mode7Labs/zap',
     description: 'Complete Zap game engine documentation for AI assistants',
