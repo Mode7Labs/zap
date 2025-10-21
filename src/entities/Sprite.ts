@@ -163,12 +163,17 @@ export class Sprite extends Entity {
           const frameX = (frameIndex % framesPerRow) * this.frameWidth;
           const frameY = Math.floor(frameIndex / framesPerRow) * this.frameHeight;
 
-          ctx.drawImage(
-            this.image,
-            frameX, frameY,
-            this.frameWidth, this.frameHeight,
-            offsetX, offsetY,
-            this.width, this.height
+          this.drawImageWithOptionalRadius(
+            ctx,
+            () => ctx.drawImage(
+              this.image as HTMLImageElement,
+              frameX, frameY,
+              this.frameWidth as number, this.frameHeight as number,
+              offsetX, offsetY,
+              this.width, this.height
+            ),
+            offsetX,
+            offsetY
           );
         }
         // Don't fall through - sprite sheets should only render via animations
@@ -176,7 +181,12 @@ export class Sprite extends Entity {
       }
 
       // Draw full image (for non-animated sprites only)
-      ctx.drawImage(this.image, offsetX, offsetY, this.width, this.height);
+      this.drawImageWithOptionalRadius(
+        ctx,
+        () => ctx.drawImage(this.image as HTMLImageElement, offsetX, offsetY, this.width, this.height),
+        offsetX,
+        offsetY
+      );
     } else if (this.color) {
       ctx.fillStyle = this.color;
 
@@ -201,17 +211,48 @@ export class Sprite extends Entity {
     height: number,
     radius: number
   ): void {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
+    this.createRoundedRectPath(ctx, x, y, width, height, radius);
     ctx.fill();
+  }
+
+  private drawImageWithOptionalRadius(
+    ctx: CanvasRenderingContext2D,
+    drawFn: () => void,
+    offsetX: number,
+    offsetY: number
+  ): void {
+    if (this.radius > 0) {
+      ctx.save();
+      this.createRoundedRectPath(ctx, offsetX, offsetY, this.width, this.height, this.radius);
+      ctx.clip();
+      drawFn();
+      ctx.restore();
+      return;
+    }
+
+    drawFn();
+  }
+
+  private createRoundedRectPath(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number
+  ): void {
+    const clampedRadius = Math.max(0, Math.min(radius, Math.min(width, height) / 2));
+
+    ctx.beginPath();
+    ctx.moveTo(x + clampedRadius, y);
+    ctx.lineTo(x + width - clampedRadius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + clampedRadius);
+    ctx.lineTo(x + width, y + height - clampedRadius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - clampedRadius, y + height);
+    ctx.lineTo(x + clampedRadius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - clampedRadius);
+    ctx.lineTo(x, y + clampedRadius);
+    ctx.quadraticCurveTo(x, y, x + clampedRadius, y);
+    ctx.closePath();
   }
 }

@@ -149,6 +149,55 @@ const avatar = new Sprite({
 });
 ```
 
+### Rounded Image Demo
+
+```codemirror
+import { Game, Scene, Sprite, Text } from '@VERSION';
+
+const game = new Game({
+  width: 400,
+  height: 320,
+  backgroundColor: '#0b132b'
+});
+
+const scene = new Scene();
+
+const title = new Text({
+  x: 200,
+  y: 50,
+  text: 'Rounded Sprites',
+  fontSize: 20,
+  color: '#4fc3f7',
+  align: 'center'
+});
+
+const avatar = new Sprite({
+  x: 200,
+  y: 170,
+  width: 160,
+  height: 160,
+  radius: 80,
+  image: '../assets/bg.jpg',
+  alpha: 0
+});
+
+scene.add(title);
+scene.add(avatar);
+
+avatar.on('imageload', () => {
+  avatar.tween(
+    { alpha: 1, scaleX: 1, scaleY: 1 },
+    { duration: 400, easing: 'easeOutBack' }
+  );
+});
+
+avatar.scaleX = 0.6;
+avatar.scaleY = 0.6;
+
+game.setScene(scene);
+game.start();
+```
+
 ## Preloading Images
 
 Use AssetLoader to preload images before creating sprites:
