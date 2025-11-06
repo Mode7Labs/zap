@@ -5,7 +5,7 @@ description: Configure your Game instance with all available options
 
 # Game Configuration
 
-The `Game` class is the root of your Zap application. It manages the canvas, game loop, and all core systems.
+The [`Game`](/core/game) class is the root of your Zap application. It manages the canvas, game loop, and all core systems including the [camera](/core/camera), [gestures](/core/architecture#gesture-manager), and [scene](/core/scenes) management.
 
 ## Basic Setup
 
@@ -22,11 +22,15 @@ game.start();
 
 This creates a 800x600 canvas appended to `document.body`.
 
-## Display Options
+## Configuration Options
 
-### Canvas Size
+All options are passed to the `Game` constructor as an object.
 
-Control the dimensions of your game:
+### Display Options
+
+#### width / height
+
+Set the canvas dimensions in pixels.
 
 ```javascript
 const game = new Game({
@@ -35,9 +39,11 @@ const game = new Game({
 });
 ```
 
-### Custom Parent
+**Default:** `800` x `600`
 
-Append the canvas to a specific element:
+#### parent
+
+Specify where to append the canvas. Accepts a CSS selector string or an `HTMLElement`.
 
 ```javascript
 // Using a selector
@@ -52,9 +58,11 @@ const game = new Game({
 });
 ```
 
-### Existing Canvas
+**Default:** `document.body`
 
-Use an existing canvas element:
+#### canvas
+
+Use an existing canvas element instead of creating a new one.
 
 ```javascript
 const canvas = document.querySelector('canvas');
@@ -65,9 +73,11 @@ const game = new Game({
 });
 ```
 
-### Background Color
+**Default:** Creates a new canvas element
 
-Set the default background color:
+#### backgroundColor
+
+Set the default background color. Can be overridden per [scene](/core/scenes).
 
 ```javascript
 const game = new Game({
@@ -75,72 +85,42 @@ const game = new Game({
 });
 ```
 
-### Responsive Mode
+**Default:** `'#000000'` (black)
 
-Make the canvas automatically resize with its container:
+#### responsive
+
+Make the canvas automatically resize to fit its container while maintaining the aspect ratio defined by `width` and `height`.
 
 ```javascript
 const game = new Game({
+  width: 1920,
+  height: 1080,  // 16:9 aspect ratio
   responsive: true
 });
 ```
 
-**With Aspect Ratio Control:**
+When enabled:
+- Canvas scales to fill the container
+- Aspect ratio is maintained with letterboxing/pillarboxing
+- Game coordinates (`game.width` and `game.height`) remain constant
+- No responsive calculations needed in your code
 
-Combine `responsive: true` with `width` and `height` to maintain a specific aspect ratio:
+**Common aspect ratios:**
+- `1920 x 1080` - 16:9 landscape (Full HD)
+- `1280 x 720` - 16:9 landscape (HD)
+- `800 x 600` - 4:3 landscape (classic)
+- `1080 x 1920` - 9:16 portrait (mobile)
 
-```codemirror
-import { Game, Scene, Sprite } from '@VERSION';
+**Default:** `false`
 
-// Creates a responsive game that maintains 16:9 aspect ratio
-const game = new Game({
-  parent: '#app',
-  width: 1920,
-  height: 1080,  // 16:9 aspect ratio
-  responsive: true,
-  backgroundColor: '#1a1a2e'
-});
+### Rendering Quality
 
-const scene = new Scene();
+#### pixelRatio
 
-// Game will automatically add letterboxing/pillarboxing to maintain aspect ratio
-// Your game logic always works with the specified dimensions (1920x1080)
-
-const player = new Sprite({
-  x: game.width / 2,  // Always 960 (half of 1920)
-  y: game.height / 2,  // Always 540 (half of 1080)
-  width: 50,
-  height: 50,
-  color: '#e94560'
-});
-
-scene.add(player);
-game.setScene(scene);
-game.start();
-```
-
-**Common Aspect Ratios:**
-- `width: 1920, height: 1080` - 16:9 landscape (HD/Full HD)
-- `width: 1280, height: 720` - 16:9 landscape (HD)
-- `width: 800, height: 600` - 4:3 landscape (classic)
-- `width: 1080, height: 1920` - 9:16 portrait (mobile)
-- `width: 720, height: 1280` - 9:16 portrait (mobile)
-
-**Benefits:**
-- Canvas automatically scales to fit container
-- Aspect ratio is always maintained with letterboxing/pillarboxing
-- Your code always uses the same coordinate system
-- No complex responsive calculations needed
-- `game.width` and `game.height` stay constant
-
-## Rendering Quality
-
-### Pixel Ratio
-
-Control pixel density for high-DPI displays:
+Control pixel density for high-DPI displays. Set to `1` for pixel-perfect art.
 
 ```javascript
-// Use device pixel ratio (default)
+// Use device pixel ratio (crisp on retina displays)
 const game = new Game({
   pixelRatio: window.devicePixelRatio
 });
@@ -152,18 +132,20 @@ const game = new Game({
 });
 ```
 
-### Antialiasing
+**Default:** `window.devicePixelRatio ?? 1`
 
-Control image smoothing:
+#### antialias
+
+Enable or disable image smoothing.
 
 ```javascript
 const game = new Game({
-  antialias: true,  // Smooth rendering (default)
-  imageSmoothingQuality: 'high'  // 'low', 'medium', or 'high'
+  antialias: true,  // Smooth rendering
+  imageSmoothingQuality: 'high'
 });
 ```
 
-For pixel-perfect rendering:
+For pixel-perfect rendering, disable antialiasing:
 
 ```javascript
 const game = new Game({
@@ -172,11 +154,25 @@ const game = new Game({
 });
 ```
 
-## Performance Options
+**Default:** `true`
 
-### Target FPS
+#### imageSmoothingQuality
 
-Limit the frame rate:
+Set the image smoothing quality when `antialias` is enabled.
+
+```javascript
+const game = new Game({
+  imageSmoothingQuality: 'high'  // 'low', 'medium', or 'high'
+});
+```
+
+**Default:** `'high'`
+
+### Performance Options
+
+#### targetFPS
+
+Limit the maximum frame rate. Useful for battery conservation or performance tuning.
 
 ```javascript
 const game = new Game({
@@ -184,21 +180,25 @@ const game = new Game({
 });
 ```
 
-### Max Delta Time
+**Default:** `null` (runs at monitor refresh rate, typically 60 FPS)
 
-Prevent spiral of death during lag:
+#### maxDeltaTime
+
+Cap the maximum delta time (in seconds) to prevent "spiral of death" during lag spikes.
 
 ```javascript
 const game = new Game({
-  maxDeltaTime: 0.1  // Cap delta at 100ms (default)
+  maxDeltaTime: 0.1  // Cap at 100ms
 });
 ```
 
-## Canvas Context Options
+**Default:** `0.1` (100 milliseconds)
 
-### Transparent Canvas
+### Canvas Context Options
 
-Allow transparency:
+#### alpha
+
+Allow transparency in the canvas. Enables seeing through the canvas to the page behind it.
 
 ```javascript
 const game = new Game({
@@ -207,37 +207,47 @@ const game = new Game({
 });
 ```
 
-### Desynchronized Rendering
+**Default:** `false`
 
-Hint for better performance (enabled by default):
+#### desynchronized
+
+Hint to the browser for better rendering performance by reducing latency. Generally should stay enabled.
 
 ```javascript
 const game = new Game({
-  desynchronized: true  // default
+  desynchronized: true
 });
 ```
 
-## Features
+**Default:** `true`
 
-### Touch Trail
+### Features
 
-Enable visual touch trails:
+#### enableTouchTrail
+
+Enable visual [touch trails](/animation/touch-trail) that follow pointer movement.
 
 ```javascript
 const game = new Game({
   enableTouchTrail: true
 });
 
-// Access the touch trail
-game.touchTrail.color = '#4fc3f7';
-game.touchTrail.width = 20;
+// Configure the touch trail
+if (game.touchTrail) {
+  game.touchTrail.color = '#4fc3f7';
+  game.touchTrail.width = 20;
+}
 ```
 
-## Debug Options
+**Default:** `false`
 
-### FPS Counter
+See [Touch Trail documentation](/animation/touch-trail) for more details.
 
-Show frames per second:
+### Debug Options
+
+#### showFPS
+
+Display frames per second in the top-left corner.
 
 ```javascript
 const game = new Game({
@@ -245,87 +255,144 @@ const game = new Game({
 });
 ```
 
-The FPS counter appears in the top-left corner.
+**Default:** `false`
 
-## Complete Example
+#### debug
 
-Here's a game with all common options:
+Enable debug mode for additional logging and diagnostics.
 
-```codemirror
-import { Game, Scene, Sprite } from '@VERSION';
+```javascript
+const game = new Game({
+  debug: true
+});
+```
+
+**Default:** `false`
+
+## Complete Configuration Example
+
+Here's a game with commonly used options:
+
+```javascript
+import { Game } from '@mode-7/zap';
 
 const game = new Game({
   // Display
-  width: 400,
-  height: 300,
+  width: 1280,
+  height: 720,
+  parent: '#game-container',
   backgroundColor: '#0f3460',
+  responsive: true,
 
   // Quality
   pixelRatio: window.devicePixelRatio,
   antialias: true,
   imageSmoothingQuality: 'high',
 
+  // Performance
+  targetFPS: 60,
+  maxDeltaTime: 0.1,
+
+  // Features
+  enableTouchTrail: false,
+
   // Debug
-  showFPS: true
+  showFPS: false,
+  debug: false
 });
-
-const scene = new Scene();
-
-const sprite = new Sprite({
-  x: 200,
-  y: 150,
-  width: 60,
-  height: 60,
-  color: '#e94560'
-});
-
-scene.add(sprite);
-game.setScene(scene);
-game.start();
 ```
 
 ## Game Methods
 
 ### setScene()
 
-Switch to a new scene:
+Switch to a new [scene](/core/scenes). Optionally specify a transition effect.
 
 ```javascript
+// Instant switch
 game.setScene(newScene);
-```
 
-With a transition:
-
-```javascript
+// With transition
 await game.setScene(newScene, {
   transition: 'fade',
   duration: 500
 });
 ```
 
-Available transitions: `'fade'`, `'slide-left'`, `'slide-right'`, `'slide-up'`, `'slide-down'`
+**Available transitions:**
+- `'fade'` - Fade to black and back
+- `'slide-left'` - Slide left
+- `'slide-right'` - Slide right
+- `'slide-up'` - Slide up
+- `'slide-down'` - Slide down
 
-`setScene` returns a promise that resolves once the transition completes, so `await` it when you need to run follow-up logic after the switch. You can also call `game.transitionTo(scene, options)` directly when you want to queue a transition without replacing the current one immediately.
+Returns a `Promise` that resolves when the transition completes.
+
+### transitionTo()
+
+Directly trigger a scene transition. This is called internally by `setScene()` when a transition is specified.
+
+```javascript
+await game.transitionTo(newScene, {
+  type: 'fade',
+  duration: 500
+});
+```
+
+### getScene()
+
+Get the currently active scene.
+
+```javascript
+const currentScene = game.getScene();
+```
+
+Returns the current `Scene` or `null` if no scene is set.
 
 ### start()
 
-Start the game loop:
+Start the game loop. Call this after setting the initial scene.
 
 ```javascript
 game.start();
 ```
 
+Emits `'start'` event. If the game was paused, also emits `'resume'` event.
+
 ### stop()
 
-Pause the game loop:
+Stop the game loop. Use this to pause the game.
 
 ```javascript
 game.stop();
 ```
 
+Emits `'stop'` and `'pause'` events.
+
+### resize()
+
+Manually trigger a canvas resize. This is called automatically when `responsive: true` is enabled.
+
+```javascript
+game.resize();
+```
+
+### canvasToGame()
+
+Convert canvas/screen coordinates to game coordinates. Useful for pointer events.
+
+```javascript
+canvas.addEventListener('click', (e) => {
+  const gamePos = game.canvasToGame(e.clientX, e.clientY);
+  console.log('Clicked at:', gamePos.x, gamePos.y);
+});
+```
+
+Returns `{ x: number, y: number }` in game coordinate space.
+
 ### destroy()
 
-Clean up and remove the game:
+Clean up and remove the game. Stops the game loop, removes event listeners, and cleans up resources.
 
 ```javascript
 game.destroy();
@@ -333,30 +400,127 @@ game.destroy();
 
 ## Game Properties
 
-Access useful properties:
+Access these properties to interact with the game state:
+
+### Dimensions
 
 ```javascript
-game.width          // Canvas width
-game.height         // Canvas height
-game.canvas         // HTMLCanvasElement
-game.ctx            // CanvasRenderingContext2D
-game.camera         // Camera instance
-game.gestures       // GestureManager instance
-game.currentScene   // Current Scene (read-only)
+game.width   // Canvas width in game coordinates
+game.height  // Canvas height in game coordinates
+```
+
+### Canvas & Context
+
+```javascript
+game.canvas  // HTMLCanvasElement
+game.ctx     // CanvasRenderingContext2D
+```
+
+### Systems
+
+```javascript
+game.camera       // Camera instance - see Camera documentation
+game.gestures     // GestureManager instance
+game.touchTrail   // TouchTrail instance (if enabled) or null
+```
+
+**See also:**
+- [Camera documentation](/core/camera)
+- [Touch Trail documentation](/animation/touch-trail)
+
+### Scene
+
+```javascript
+const scene = game.getScene();  // Get currently active Scene
 ```
 
 ## Game Events
 
-Use `game.on(event, handler)` to subscribe:
+The `Game` class extends [`EventEmitter`](/core/architecture#event-system). Listen for events with `game.on()`:
 
-- `start` / `stop` – game loop state changes
-- `resume` / `pause` – resume after a stop or pause without destroying the game
-- `update` – runs every frame with `deltaTime`
-- `render` – fires after the engine renders, passing the 2D context for custom overlays
-- `scenechange` – emitted whenever a new scene becomes active
+### Lifecycle Events
+
+```javascript
+game.on('start', () => {
+  console.log('Game loop started');
+});
+
+game.on('stop', () => {
+  console.log('Game loop stopped');
+});
+
+game.on('pause', () => {
+  console.log('Game paused');
+});
+
+game.on('resume', () => {
+  console.log('Game resumed');
+});
+```
+
+### Frame Events
+
+```javascript
+game.on('update', (deltaTime) => {
+  // Called every frame before rendering
+  // deltaTime is in seconds (e.g., 0.016 for 60 FPS)
+});
+
+game.on('render', (ctx) => {
+  // Called every frame after rendering
+  // Useful for custom overlays
+  // ctx is the CanvasRenderingContext2D
+});
+```
+
+### Scene Events
+
+```javascript
+game.on('scenechange', (scene) => {
+  console.log('Scene changed to:', scene);
+});
+```
+
+### Resize Event
+
+Fired when canvas is resized (only when `responsive: true`):
+
+```javascript
+game.on('resize', (event) => {
+  // event.displayWidth, event.displayHeight - actual display size
+  // event.designWidth, event.designHeight - design resolution
+  console.log(`Display: ${event.displayWidth}x${event.displayHeight}`);
+});
+```
+
+### Pointer Events
+
+Low-level pointer events (consider using [gestures](/gestures/tap) instead):
+
+```javascript
+game.on('pointerdown', (event) => {
+  // event.position = { x, y }
+  // event.originalEvent = PointerEvent
+});
+
+game.on('pointermove', (event) => {
+  // Pointer moved
+});
+
+game.on('pointerup', (event) => {
+  // Pointer released
+});
+
+game.on('click', (event) => {
+  // Canvas clicked
+});
+```
+
+For interactive elements, use [gesture events](/gestures/tap) on entities instead.
 
 ## Next Steps
 
-- [Scenes](/core/scenes) - Learn about scene management
-- [Camera](/camera/camera) - Control the viewport
-- [Gestures](/interactions/tap) - Handle user input
+- [Scenes](/core/scenes) - Organize your game with scenes
+- [Entities](/core/entities) - Add visual elements to your scenes
+- [Camera](/core/camera) - Control the viewport
+- [Gestures](/gestures/tap) - Handle user input

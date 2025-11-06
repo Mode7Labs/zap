@@ -9,16 +9,10 @@ Particle systems create visual effects like explosions, smoke, fire, sparkles, a
 
 ## Basic Particle Emitter
 
-```codemirror
-import { Game, Scene, ParticleEmitter } from '@VERSION';
+Create a particle emitter with rate, colors, and velocity:
 
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
+```javascript
+import { ParticleEmitter } from '@mode-7/zap';
 
 const emitter = new ParticleEmitter({
   x: 200,
@@ -34,10 +28,9 @@ const emitter = new ParticleEmitter({
 });
 
 scene.add(emitter);
-
-game.setScene(scene);
-game.start();
 ```
+
+> **Note**: Examples assume basic setup with `Game` and `Scene`. See [Getting Started](/getting-started/quickstart) if you're new to Zap.
 
 ## Particle Emitter Options
 
@@ -46,28 +39,28 @@ const emitter = new ParticleEmitter({
   x: 200,
   y: 150,
 
-  // Emission rate
+  // Emission rate (default: 10)
   rate: 10,  // Particles per second
 
-  // Velocity range (pixels/second)
+  // Velocity range in pixels/second (default: -50 to 50 for both x and y)
   velocityRange: {
     min: { x: -50, y: -50 },
     max: { x: 50, y: 50 }
   },
 
-  // Size range
+  // Size range (default: 2 to 6)
   sizeRange: { min: 2, max: 6 },
 
-  // Lifetime range (seconds)
+  // Lifetime range in seconds (default: 0.5 to 1.5)
   lifetimeRange: { min: 0.5, max: 1.5 },
 
-  // Colors (randomly chosen for each particle)
+  // Colors array - randomly chosen for each particle (default: ['#ffffff'])
   colors: ['#ff0000', '#00ff00', '#0000ff'],
 
   // Additional particle options
   particleOptions: {
-    gravity: 100,    // Downward acceleration
-    friction: 0.98   // Velocity dampening
+    gravity: 100,    // Downward acceleration (default: 0)
+    friction: 0.98   // Velocity dampening (default: 1 = no friction)
   }
 });
 ```
@@ -118,7 +111,7 @@ scene.add(button);
 
 button.on('tap', () => {
   emitter.burst(50);  // Emit 50 particles at once
-  button.tween({ scaleX: 0.8, scaleY: 0.8 }, { duration: 100 })
+  button.tween({ scaleX: 0.9, scaleY: 0.9 }, { duration: 100 })
     .then(() => button.tween({ scaleX: 1, scaleY: 1 }, { duration: 100 }));
 });
 
@@ -136,12 +129,12 @@ import { Particle } from '@mode-7/zap';
 const particle = new Particle({
   x: 200,
   y: 150,
-  velocity: { x: 50, y: -100 },
-  color: '#4fc3f7',
-  size: 6,
-  lifetime: 2,      // Seconds before fading out
-  gravity: 100,     // Pixels/second²
-  friction: 0.99    // Velocity multiplier per frame
+  velocity: { x: 50, y: -100 },  // Optional (default: {x: 0, y: 0})
+  color: '#4fc3f7',               // Optional (default: '#ffffff')
+  size: 6,                        // Optional (default: 4)
+  lifetime: 2,                    // Optional (default: 1) - seconds before fading out
+  gravity: 100,                   // Optional (default: 0) - pixels/second²
+  friction: 0.99                  // Optional (default: 1) - velocity multiplier per frame
 });
 
 scene.add(particle);
@@ -285,6 +278,8 @@ scene.on('update', () => {
 
 ## Physics Properties
 
+Particles use Zap's built-in physics system, which is available on all entities. See the [Physics](/physics/physics) documentation for more details.
+
 ### Gravity
 
 Accelerates particles downward (or upward if negative):
@@ -306,6 +301,8 @@ friction: 0.9   // Medium slowdown
 friction: 0.5   // Heavy drag
 ```
 
+> **Note:** These physics properties (`gravity`, `friction`, `vx`, `vy`) work on all Entity types, not just Particles. Particles simply leverage the Entity physics system for movement.
+
 ## Dynamic Emitters
 
 Attach emitter to moving entities:
@@ -324,16 +321,18 @@ const exhaust = new ParticleEmitter({
 rocket.addChild(exhaust);  // Follows rocket
 ```
 
-## Stopping and Starting
+## Controlling Emission
+
+Control particle emission rate:
 
 ```javascript
-// Stop emitting
+// Stop emitting (set rate to 0)
 emitter.rate = 0;
 
-// Resume emitting
+// Start/resume emitting
 emitter.rate = 20;
 
-// Remove emitter entirely
+// Remove emitter and all its particles
 emitter.destroy();
 ```
 

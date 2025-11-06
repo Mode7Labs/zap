@@ -209,15 +209,20 @@ game.start();
 
 ## Music Options
 
-Customize music playback:
+Customize music playback with optional parameters:
 
 ```javascript
 audioManager.playMusic('/music/battle.mp3', {
   loop: true,      // Loop the music (default: true)
-  volume: 0.6,     // Music volume 0-1 (default: 1)
+  volume: 0.6,     // Per-track volume 0-1 (default: 1)
   rate: 1.0        // Playback speed (default: 1)
 });
 ```
+
+All options are optional and have defaults:
+- `loop`: `true` (music loops by default)
+- `volume`: `1` (0-1 range, per-track volume)
+- `rate`: `1` (playback speed multiplier)
 
 ## Music Volume
 

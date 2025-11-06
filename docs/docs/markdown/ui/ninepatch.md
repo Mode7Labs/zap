@@ -162,7 +162,9 @@ game.setScene(scene);
 game.start();
 ```
 
-With an actual NinePatch image:
+## NinePatch Options
+
+All required options:
 
 ```javascript
 import { NinePatch } from '@mode-7/zap';
@@ -170,14 +172,16 @@ import { NinePatch } from '@mode-7/zap';
 const panel = new NinePatch({
   x: 200,
   y: 150,
-  width: 300,      // Can be any width
-  height: 200,     // Can be any height
-  image: '/ui/panel.png',  // Nine-patch image
-  corners: 16      // Corner size in pixels
+  width: 300,              // Can be any width (required)
+  height: 200,             // Can be any height (required)
+  image: '/ui/panel.png',  // Nine-patch image (required)
+  corners: 16              // Corner size in pixels (required)
 });
 
 scene.add(panel);
 ```
+
+**Note:** `corners` parameter has no default - you must specify the corner size to match your image.
 
 ## Corner Size
 

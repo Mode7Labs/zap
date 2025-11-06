@@ -167,25 +167,30 @@ game.start();
 
 ## Playback Options
 
-Control how sounds are played:
+Control how sounds are played with optional parameters:
 
 ```javascript
-// Play with custom volume (0-1)
+// Play with custom volume (0-1, default: 1)
 audioManager.playSound('jump', { volume: 0.5 });
 
-// Play at different playback rate (speed)
+// Play at different playback rate (speed, default: 1)
 audioManager.playSound('laser', { rate: 1.5 }); // 1.5x speed
 
-// Loop a sound
+// Loop a sound (default: false)
 audioManager.playSound('engine', { loop: true });
 
 // Combine options
 audioManager.playSound('coin', {
-  volume: 0.8,
-  rate: 1.2,
-  loop: false
+  volume: 0.8,  // Default: 1
+  rate: 1.2,    // Default: 1
+  loop: false   // Default: false
 });
 ```
+
+All options are optional and have defaults:
+- `volume`: `1` (0-1 range)
+- `rate`: `1` (playback speed multiplier)
+- `loop`: `false`
 
 ## Random Sounds
 
@@ -200,7 +205,7 @@ audioManager.loadSounds({
 });
 
 // Play random hit sound on collision
-entity.on('collision', () => {
+entity.on('collide', () => {
   audioManager.playRandomSound(['hit1', 'hit2', 'hit3']);
 });
 ```
@@ -231,7 +236,7 @@ button.on('tap', () => {
 ### Collision Sounds
 
 ```javascript
-player.on('collision', (other) => {
+player.on('collide', (other) => {
   if (other.hasTag('enemy')) {
     audioManager.playSound('hurt');
   } else if (other.hasTag('coin')) {

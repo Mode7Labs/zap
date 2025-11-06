@@ -481,6 +481,24 @@ game.on('dragend', (event) => {
 });
 ```
 
+## Hover Events
+
+Detect when the pointer enters or exits an interactive entity:
+
+```javascript
+sprite.on('pointerover', (event) => {
+  // Pointer entered the entity
+  sprite.alpha = 0.8;
+});
+
+sprite.on('pointerout', (event) => {
+  // Pointer left the entity
+  sprite.alpha = 1;
+});
+```
+
+**Note:** Hover events work with mouse only, not touch devices.
+
 ## Tips
 
 - **Always set `interactive: true`** on draggable entities

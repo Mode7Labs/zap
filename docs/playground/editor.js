@@ -6,6 +6,8 @@ export class Editor {
   constructor() {
     this.editor = null;
     this.updateTimer = null;
+    this.lastRuntimeError = null;
+    this.errorCallback = null;
     this.init();
   }
 
@@ -25,6 +27,41 @@ export class Editor {
       clearTimeout(this.updateTimer);
       this.updateTimer = setTimeout(() => this.updatePreview(), 1000);
     });
+
+    // Listen for runtime errors from preview iframe
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'runtime-error') {
+        this.lastRuntimeError = {
+          message: event.data.message,
+          stack: event.data.stack,
+          timestamp: Date.now()
+        };
+
+        // Show error in UI
+        this.showError(event.data.message, event.data.stack);
+
+        // Notify callback if registered
+        if (this.errorCallback) {
+          this.errorCallback(this.lastRuntimeError);
+        }
+      }
+    });
+  }
+
+  // Register a callback for runtime errors (used by AI)
+  onRuntimeError(callback) {
+    this.errorCallback = callback;
+  }
+
+  // Clear the last runtime error
+  clearRuntimeError() {
+    this.lastRuntimeError = null;
+    this.clearError();
+  }
+
+  // Get the last runtime error (if any)
+  getLastError() {
+    return this.lastRuntimeError;
   }
 
   setValue(code) {

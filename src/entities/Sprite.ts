@@ -7,7 +7,6 @@ import { Entity } from './Entity';
 export class Sprite extends Entity {
   public color: string | null = null;
   public image: HTMLImageElement | null = null;
-  public radius: number = 0;
 
   // Animation support (optional)
   public frameWidth?: number;
@@ -24,7 +23,6 @@ export class Sprite extends Entity {
     super(options);
 
     this.color = options.color ?? null;
-    this.radius = options.radius ?? 0;
 
     // Animation setup (optional)
     this.frameWidth = options.frameWidth;
@@ -193,7 +191,7 @@ export class Sprite extends Entity {
     } else if (this.color) {
       ctx.fillStyle = this.color;
 
-      if (this.radius > 0) {
+      if (this.radius && this.radius > 0) {
         if (circleRadius !== null) {
           const circleCenterX = offsetX + this.width / 2;
           const circleCenterY = offsetY + this.height / 2;
@@ -213,7 +211,7 @@ export class Sprite extends Entity {
    * Determine if the sprite should render as a perfect circle and return the circle radius.
    */
   private getCircleRadius(): number | null {
-    if (this.radius <= 0 || this.width <= 0 || this.height <= 0) {
+    if (!this.radius || this.radius <= 0 || this.width <= 0 || this.height <= 0) {
       return null;
     }
 
@@ -267,7 +265,7 @@ export class Sprite extends Entity {
     offsetY: number,
     circleRadius: number | null
   ): void {
-    if (this.radius > 0) {
+    if (this.radius && this.radius > 0) {
       ctx.save();
       const circleCenterX = offsetX + this.width / 2;
       const circleCenterY = offsetY + this.height / 2;

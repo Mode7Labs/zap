@@ -5,7 +5,7 @@ description: Detect overlaps and handle collisions between entities
 
 # Collision Detection
 
-Zap provides built-in collision detection using Axis-Aligned Bounding Boxes (AABB) with event-based collision handling.
+Zap provides built-in shape-aware collision detection with event-based collision handling. It automatically uses circle collision for entities with `radius` and rectangle collision (AABB) for entities with `width`/`height`.
 
 ## Important: How Collision Detection Works
 
@@ -75,6 +75,101 @@ player.on('drag', (event) => {
 
 game.setScene(scene);
 game.start();
+```
+
+## Static vs Dynamic Objects
+
+Entities can be marked as **static** (immovable) or **dynamic** (movable):
+
+```javascript
+// Dynamic object (default) - can move and respond to physics
+const player = new Sprite({
+  x: 100,
+  y: 100,
+  width: 50,
+  height: 50,
+  vx: 0,
+  vy: 0,
+  gravity: 980,
+  checkCollisions: true,
+  static: false  // Default, can be omitted
+});
+
+// Static object - immovable (walls, platforms, obstacles)
+const wall = new Sprite({
+  x: 300,
+  y: 200,
+  width: 100,
+  height: 400,
+  color: '#2c3e50',
+  checkCollisions: true,
+  static: true  // Cannot be moved by collisions
+});
+```
+
+**Key Differences:**
+- **Dynamic objects** (`static: false` or omitted):
+  - Can move and respond to physics (velocity, gravity, friction)
+  - Automatically bounce off static objects when colliding
+  - Can push other dynamic objects
+
+- **Static objects** (`static: true`):
+  - Cannot be moved by collisions
+  - Don't need physics properties (vx, vy, gravity, etc.)
+  - Perfect for walls, platforms, and terrain
+  - More efficient - no physics calculations needed
+
+## Physics Integration
+
+When entities have both **collision detection** and **physics properties** enabled, they automatically respond to collisions:
+
+```javascript
+const ball = new Sprite({
+  x: 200,
+  y: 100,
+  width: 40,
+  height: 40,
+  radius: 20,
+  vx: 150,
+  vy: 0,
+  gravity: 980,
+  bounciness: 0.8,       // Bounce energy retention
+  checkCollisions: true  // Enable automatic collision response
+});
+
+const floor = new Sprite({
+  x: 200,
+  y: 280,
+  width: 400,
+  height: 40,
+  checkCollisions: true,
+  static: true  // Immovable platform
+});
+
+scene.add(ball);
+scene.add(floor);
+
+// Ball automatically bounces off floor - no manual bounce() needed!
+// The bounciness property controls how much energy is retained
+```
+
+**Automatic Behaviors:**
+- Dynamic objects **bounce off** static objects based on `bounciness` property
+- Overlapping entities are **automatically separated**
+- Velocity is **adjusted** to prevent tunneling through objects
+- Collision **events still fire** for custom game logic
+
+**Manual Control:**
+If you want full control over collision response, disable automatic response by not setting physics properties, and use the collision events:
+
+```javascript
+player.on('collisionenter', (event) => {
+  if (event.other.hasTag('wall')) {
+    // Custom response - stop movement
+    player.vx = 0;
+    player.vy = 0;
+  }
+});
 ```
 
 ## Collision Events
@@ -385,114 +480,27 @@ player.on('collisionexit', (event) => {
 
 ### Proximity Detection
 
-Activate when player gets close:
-
 ```javascript
 scene.on('update', () => {
-  const distance = player.distanceTo(npc);
-
-  if (distance < 50) {
-    // Show interaction prompt
+  if (player.distanceTo(npc) < 50) {
     promptText.visible = true;
-
-    // Press E to interact
-    if (keyboard.isPressed('e')) {
-      startDialogue();
-    }
+    if (keyboard.isPressed('e')) startDialogue();
   } else {
     promptText.visible = false;
   }
 });
 ```
 
-### Collision Groups
-
-Multiple collision layers:
-
-```javascript
-// Setup
-const player = new Sprite({ /* ... */ });
-player.checkCollisions = true;
-player.collisionTags = ['enemy', 'collectible', 'wall'];
-
-// Enemies
-const enemy = new Sprite({ /* ... */ });
-enemy.addTag('enemy');
-
-// Walls
-const wall = new Sprite({ /* ... */ });
-wall.addTag('wall');
-
-// Collectibles
-const coin = new Sprite({ /* ... */ });
-coin.addTag('collectible');
-
-// Handle different collision types
-player.on('collisionenter', (event) => {
-  const other = event.other;
-
-  if (other.hasTag('enemy')) {
-    player.health -= 20;
-  } else if (other.hasTag('collectible')) {
-    player.score += 10;
-    other.destroy();
-  } else if (other.hasTag('wall')) {
-    // Stop movement (simple approach)
-    player.velocityX = 0;
-    player.velocityY = 0;
-  }
-});
-```
-
 ### Knockback on Hit
-
-Push player away from enemy:
 
 ```javascript
 player.on('collisionenter', (event) => {
   if (event.other.hasTag('enemy')) {
-    player.health -= 10;
-
-    // Calculate knockback direction
     const dx = player.x - event.other.x;
     const dy = player.y - event.other.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Normalize and apply knockback
-    player.velocityX = (dx / distance) * 200;
-    player.velocityY = (dy / distance) * 200;
-
-    // Flash red
-    player.color = '#e94560';
-    delay(200, () => {
-      player.color = '#4fc3f7';
-    });
-  }
-});
-```
-
-### Door Unlock
-
-Collision with key unlocks door:
-
-```javascript
-const player = new Sprite({ /* ... */ });
-player.checkCollisions = true;
-player.collisionTags = ['key', 'door'];
-player.hasKey = false;
-
-player.on('collisionenter', (event) => {
-  if (event.other.hasTag('key')) {
-    player.hasKey = true;
-    event.other.destroy();
-    showMessage('Key obtained!');
-  } else if (event.other.hasTag('door')) {
-    if (player.hasKey) {
-      event.other.destroy();
-      showMessage('Door unlocked!');
-    } else {
-      showMessage('Door is locked. Find a key!');
-    }
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    player.vx = (dx / dist) * 200;
+    player.vy = (dy / dist) * 200;
   }
 });
 ```
@@ -614,11 +622,35 @@ Filter which entities to collide with:
 entity.collisionTags = ['enemy', 'wall'];
 ```
 
+### `static`
+
+Mark entity as immovable by collisions:
+
+```javascript
+entity.static = true;  // Immovable (walls, platforms)
+entity.static = false; // Movable (default)
+```
+
+Static entities:
+- Cannot be moved by collision forces
+- Don't need physics properties (vx, vy, gravity)
+- More efficient for fixed obstacles
+- Dynamic objects automatically bounce off them
+
+## Collision Detection Types
+
+Zap automatically detects the collision type based on entity properties:
+
+- **Circle collision**: When entity has `radius` property set
+- **Rectangle collision (AABB)**: When entity has `width` and `height` properties
+- **Circle-rectangle**: Automatically handled when checking between different types
+
+This means you get accurate collision detection without any extra configuration!
+
 ## Limitations
 
-- **AABB Only**: Uses axis-aligned bounding boxes (rectangles)
-- **No rotation**: Rotated entities still use upright bounding boxes
-- **No physics**: Collision detection only, no automatic physics response
+- **Rotation**: Rotated rectangles still use axis-aligned bounding boxes (AABB)
+- **Automatic physics** only applies to entities with physics properties (vx, vy, gravity, etc.) - for custom collision response, use collision events
 
 ## Tips
 

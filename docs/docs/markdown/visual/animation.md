@@ -347,4 +347,4 @@ walk('right');  // Play walk-right animation
 - [Shapes](/visual/shapes) - Create colored shapes
 - [Sprites](/visual/sprites) - Load static images
 - [Text](/visual/text) - Render text
-- [Tweening](/animation/animations) - Smooth property animations
+- [Tweening](/animation/tweens) - Smooth property animations

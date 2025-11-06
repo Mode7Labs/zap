@@ -261,27 +261,6 @@ sprite.on('swipe', (event) => {
 });
 ```
 
-### Swipe to Refresh
-
-Pull down to refresh:
-
-```javascript
-let isRefreshing = false;
-
-canvas.on('swipe', (event) => {
-  if (event.direction === 'down' && !isRefreshing) {
-    isRefreshing = true;
-    console.log('Refreshing...');
-
-    // Animate refresh indicator
-    setTimeout(() => {
-      console.log('Refresh complete');
-      isRefreshing = false;
-    }, 2000);
-  }
-});
-```
-
 ### Swipe Controls
 
 Game character movement:
@@ -334,90 +313,23 @@ sprite.on('swipe', (event) => {
 });
 ```
 
-### Swipe Threshold
+### Horizontal or Vertical Only
 
-Only respond to fast swipes:
-
-```javascript
-sprite.on('swipe', (event) => {
-  const speed = Math.sqrt(
-    event.velocity.x ** 2 + event.velocity.y ** 2
-  );
-
-  if (speed > 0.5) {  // Minimum swipe speed
-    console.log('Fast swipe detected!');
-    // Perform action
-  } else {
-    console.log('Swipe too slow');
-  }
-});
-```
-
-### Horizontal Only
-
-Only detect horizontal swipes:
+Filter swipes by direction:
 
 ```javascript
+// Horizontal only
 sprite.on('swipe', (event) => {
   if (event.direction === 'left' || event.direction === 'right') {
     console.log('Horizontal swipe:', event.direction);
-    // Handle horizontal swipe
   }
-  // Ignore vertical swipes
 });
-```
 
-### Vertical Only
-
-Only detect vertical swipes:
-
-```javascript
+// Vertical only
 sprite.on('swipe', (event) => {
   if (event.direction === 'up' || event.direction === 'down') {
     console.log('Vertical swipe:', event.direction);
-    // Handle vertical swipe
   }
-  // Ignore horizontal swipes
-});
-```
-
-### Swipe Progress Indicator
-
-Show swipe progress:
-
-```javascript
-let swipeStartX = 0;
-
-sprite.on('dragstart', (event) => {
-  swipeStartX = event.position.x;
-});
-
-sprite.on('drag', (event) => {
-  const distance = event.position.x - swipeStartX;
-
-  // Visual feedback during drag
-  sprite.x = sprite.x + distance * 0.3;  // Partial movement
-  sprite.rotation = distance * 0.001;    // Slight rotation
-});
-
-sprite.on('swipe', (event) => {
-  // Complete the swipe animation
-  if (event.direction === 'left' || event.direction === 'right') {
-    const targetX = event.direction === 'left' ? -100 : 500;
-
-    sprite.tween(
-      { x: targetX, alpha: 0 },
-      { duration: 300, easing: 'easeOutQuad' }
-    );
-  }
-});
-
-sprite.on('dragend', () => {
-  // Reset if not swiped
-  sprite.tween(
-    { x: 200, rotation: 0 },
-    { duration: 200, easing: 'easeOutQuad' }
-  );
 });
 ```
 

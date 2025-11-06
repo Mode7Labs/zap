@@ -3,7 +3,7 @@
 import { examples } from './examples.js';
 import { Editor } from './editor.js';
 import { Settings } from './settings.js';
-import { AIAssistant } from './ai.js';
+import { AIAssistant } from './ai-iterative.js';
 
 // Initialize modules
 const editor = new Editor();

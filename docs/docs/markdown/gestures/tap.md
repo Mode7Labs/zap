@@ -11,16 +11,8 @@ The tap gesture detects quick taps/clicks on interactive entities. Perfect for b
 
 Make an entity tappable with `interactive: true`:
 
-```codemirror
-import { Game, Scene, Sprite, Text } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
+```javascript
+import { Sprite } from '@mode-7/zap';
 
 const sprite = new Sprite({
   x: 200,
@@ -28,26 +20,11 @@ const sprite = new Sprite({
   width: 80,
   height: 80,
   color: '#e94560',
-  radius: 14,
   interactive: true  // Enable tap detection
 });
 
-let taps = 0;
-const label = new Text({
-  text: 'Tap the square',
-  x: 200,
-  y: 70,
-  fontSize: 16,
-  color: '#4fc3f7',
-  align: 'center'
-});
-
-scene.add(sprite);
-scene.add(label);
-
 sprite.on('tap', () => {
-  taps += 1;
-  label.text = `Taps: ${taps}`;
+  console.log('Tapped!');
 
   // Rotate on tap
   sprite.tween(
@@ -56,9 +33,10 @@ sprite.on('tap', () => {
   );
 });
 
-game.setScene(scene);
-game.start();
+scene.add(sprite);
 ```
+
+> **Note**: Examples assume basic setup with `Game` and `Scene`. See [Getting Started](/getting-started/quickstart) if you're new to Zap.
 
 ## Tap Detection
 
@@ -66,6 +44,23 @@ A tap is detected when:
 - Touch/click starts and ends within **10 pixels**
 - Duration is less than **300 milliseconds**
 - Works on both mouse and touch devices
+
+## Long Press
+
+For press-and-hold interactions, use the `longpress` event:
+
+```javascript
+sprite.on('longpress', (event) => {
+  console.log('Long press detected!');
+  // {
+  //   type: 'longpress',
+  //   position: { x: 200, y: 150 },
+  //   target: sprite
+  // }
+});
+```
+
+Long press fires after holding for **500 milliseconds** without moving more than 10 pixels.
 
 ## Tap Event
 
@@ -126,64 +121,6 @@ button.on('tap', () => {
       { duration: 100, easing: 'easeOutBack' }
     );
   });
-});
-
-game.setScene(scene);
-game.start();
-```
-
-## Multiple Tappable Elements
-
-Handle taps on multiple elements:
-
-```codemirror
-import { Game, Scene, Sprite, Text } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const colors = ['#e94560', '#51cf66', '#4fc3f7', '#f39c12'];
-const label = new Text({
-  text: 'Tap any circle',
-  x: 200,
-  y: 30,
-  fontSize: 14,
-  color: '#888',
-  align: 'center'
-});
-
-scene.add(label);
-
-colors.forEach((color, i) => {
-  const sprite = new Sprite({
-    x: 80 + i * 80,
-    y: 150,
-    width: 60,
-    height: 60,
-    radius: 30,
-    color: color,
-    interactive: true
-  });
-
-  sprite.on('tap', () => {
-    label.text = `Tapped ${color}`;
-    sprite.tween(
-      { scaleX: 1.3, scaleY: 1.3 },
-      { duration: 200, easing: 'easeOutQuad' }
-    ).then(() => {
-      sprite.tween(
-        { scaleX: 1, scaleY: 1 },
-        { duration: 200, easing: 'easeOutQuad' }
-      );
-    });
-  });
-
-  scene.add(sprite);
 });
 
 game.setScene(scene);

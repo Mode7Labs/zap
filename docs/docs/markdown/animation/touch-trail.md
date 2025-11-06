@@ -65,10 +65,10 @@ For more control, create TouchTrail instances manually:
 import { TouchTrail } from '@mode-7/zap';
 
 const trail = new TouchTrail({
-  color: '#4fc3f7',    // Trail color
-  width: 5,            // Trail width in pixels
-  fadeTime: 800,       // Fade duration in ms
-  maxPoints: 100       // Maximum trail points
+  color: '#4fc3f7',    // Trail color (default: '#ffffff')
+  width: 5,            // Trail width in pixels (default: 3)
+  fadeTime: 800,       // Fade duration in ms (default: 500)
+  maxPoints: 100       // Maximum trail points (default: 50)
 });
 
 // Add points manually

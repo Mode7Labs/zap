@@ -205,7 +205,7 @@ game.start();
 
 ## Easing Functions
 
-Choose from 37 easing functions for different animation feels:
+Choose from 31 easing functions for different animation feels:
 
 **Linear**: `linear` - Constant speed
 
@@ -317,10 +317,13 @@ shake();
 
 ```javascript
 // Move right, then down, then left, then up
-sprite.tween({ x: 300 }, { duration: 500 })
-  .then(() => sprite.tween({ y: 200 }, { duration: 500 }))
-  .then(() => sprite.tween({ x: 100 }, { duration: 500 }))
-  .then(() => sprite.tween({ y: 100 }, { duration: 500 }));
+sprite.tween({ x: 300 }, { duration: 500 }).then(() => {
+  sprite.tween({ y: 200 }, { duration: 500 }).then(() => {
+    sprite.tween({ x: 100 }, { duration: 500 }).then(() => {
+      sprite.tween({ y: 100 }, { duration: 500 });
+    });
+  });
+});
 ```
 
 ### Delayed Start
@@ -373,17 +376,16 @@ sprite.tween({ color: '#ff0000' }, { duration: 1000 });
 sprite.tween({ alpha: 0 }, { duration: 1000 });
 ```
 
-### Forgetting to return in chains
+### Not nesting tween chains
 
 ```javascript
-// ❌ Wrong - breaks chain
+// ❌ Wrong - second tween won't wait for first
+sprite.tween({ x: 100 }, { duration: 500 });
+sprite.tween({ y: 100 }, { duration: 500 });  // Starts immediately!
+
+// ✅ Right - nest with .then() to sequence
 sprite.tween({ x: 100 }, { duration: 500 }).then(() => {
   sprite.tween({ y: 100 }, { duration: 500 });
-});
-
-// ✅ Right - returns tween for proper chaining
-sprite.tween({ x: 100 }, { duration: 500 }).then(() => {
-  return sprite.tween({ y: 100 }, { duration: 500 });
 });
 ```
 

@@ -9,7 +9,7 @@ The Camera controls the game viewport, providing follow, zoom, rotation, and scr
 
 ## Accessing the Camera
 
-Every game has a camera accessible via `game.camera`:
+Every [game](/core/game) has a camera accessible via `game.camera`:
 
 ```javascript
 import { Game } from '@mode-7/zap';
@@ -21,9 +21,213 @@ game.camera.setZoom(2);
 game.camera.setPosition(100, 100);
 ```
 
-## Follow Entity
+## Camera Properties
 
-Make the camera smoothly follow an entity as it moves through a larger world:
+### x / y
+
+Camera position in world coordinates. The camera looks at this position.
+
+```javascript
+game.camera.x = 500;
+game.camera.y = 300;
+```
+
+**Default:** `0, 0`
+
+### zoom
+
+Zoom level. `1` is normal, `2` is 2x magnification, `0.5` is zoomed out.
+
+```javascript
+game.camera.zoom = 2;   // Zoom in 2x
+game.camera.zoom = 0.5; // Zoom out 2x
+```
+
+**Default:** `1`
+
+**Note:** Use `setZoom()` method instead of setting directly to ensure minimum zoom of `0.1`.
+
+### rotation
+
+Camera rotation in radians. Rotates the entire viewport.
+
+```javascript
+game.camera.rotation = Math.PI / 4;  // 45 degrees
+game.camera.rotation = 0;             // Reset
+```
+
+**Default:** `0`
+
+### width / height
+
+Viewport dimensions. Read-only, matches the [game canvas](/core/game) size.
+
+```javascript
+console.log(game.camera.width, game.camera.height);
+```
+
+## Camera Methods
+
+### follow()
+
+Make the camera smoothly follow an [entity](/core/entities).
+
+```javascript
+follow(entity: Entity, offset?: Point, speed?: number): void
+```
+
+**Parameters:**
+- `entity` - The entity to follow
+- `offset` - Optional offset from entity position `{ x: 0, y: 0 }`
+- `speed` - Follow speed multiplier (default: `1`)
+
+**Examples:**
+
+```javascript
+// Basic follow
+game.camera.follow(player);
+
+// Follow with offset (look ahead)
+game.camera.follow(player, { x: 50, y: 0 });
+
+// Smooth, cinematic follow (slower)
+game.camera.follow(player, { x: 0, y: 0 }, 0.5);
+
+// Fast, responsive follow
+game.camera.follow(player, { x: 0, y: 0 }, 2.0);
+```
+
+**Follow speed guide:**
+- `0.1` - Very slow, cinematic
+- `0.5` - Smooth, cinematic
+- `1.0` - Normal (default)
+- `1.5` - Responsive
+- `2.0` - Quick, snappy
+
+### stopFollow()
+
+Stop following the current entity.
+
+```javascript
+game.camera.stopFollow();
+```
+
+### setPosition()
+
+Set camera position directly.
+
+```javascript
+setPosition(x: number, y: number): void
+```
+
+**Parameters:**
+- `x` - World X coordinate
+- `y` - World Y coordinate
+
+```javascript
+// Center on specific coordinates
+game.camera.setPosition(500, 300);
+```
+
+**Note:** This is overridden if `follow()` is active. Call `stopFollow()` first for manual positioning.
+
+### setZoom()
+
+Set camera zoom level with automatic minimum clamping.
+
+```javascript
+setZoom(zoom: number): void
+```
+
+**Parameters:**
+- `zoom` - Zoom level (minimum `0.1`)
+
+```javascript
+// Zoom in
+game.camera.setZoom(2);    // 2x magnification
+
+// Zoom out
+game.camera.setZoom(0.5);  // Show 2x more area
+
+// Reset
+game.camera.setZoom(1);
+```
+
+The method automatically clamps zoom to a minimum of `0.1` to prevent division by zero.
+
+### shake()
+
+Add screen shake effect for impacts and explosions.
+
+```javascript
+shake(intensity?: number, duration?: number): void
+```
+
+**Parameters:**
+- `intensity` - Shake magnitude in pixels (default: `10`)
+- `duration` - Duration in milliseconds (default: `300`)
+
+**Examples:**
+
+```javascript
+// Default shake
+game.camera.shake();
+
+// Subtle shake
+game.camera.shake(5, 200);
+
+// Medium shake
+game.camera.shake(10, 300);
+
+// Intense shake
+game.camera.shake(20, 500);
+```
+
+### screenToWorld()
+
+Convert screen/canvas coordinates to world coordinates. Useful for mouse/touch input.
+
+```javascript
+screenToWorld(screenX: number, screenY: number): Point
+```
+
+**Parameters:**
+- `screenX` - X coordinate on canvas
+- `screenY` - Y coordinate on canvas
+
+Returns `{ x: number, y: number }` in world coordinates.
+
+```javascript
+game.on('tap', (event) => {
+  const worldPos = game.camera.screenToWorld(event.position.x, event.position.y);
+  console.log('Tapped world position:', worldPos);
+});
+```
+
+Accounts for camera position, zoom, and rotation.
+
+### worldToScreen()
+
+Convert world coordinates to screen/canvas coordinates. Useful for UI overlays.
+
+```javascript
+worldToScreen(worldX: number, worldY: number): Point
+```
+
+**Parameters:**
+- `worldX` - World X coordinate
+- `worldY` - World Y coordinate
+
+Returns `{ x: number, y: number }` in screen coordinates.
+
+```javascript
+const screenPos = game.camera.worldToScreen(entity.x, entity.y);
+// Draw UI at screenPos
+```
+
+## Follow Camera Example
+
+Make the camera smoothly follow a player through a larger world:
 
 ```codemirror
 import { Game, Scene, Sprite, Text } from '@VERSION';
@@ -116,177 +320,7 @@ game.setScene(scene);
 game.start();
 ```
 
-## Follow with Offset
-
-Offset the camera from the target:
-
-```javascript
-// Follow with offset (useful for looking ahead)
-game.camera.follow(player, { x: 50, y: 0 });  // 50px ahead horizontally
-```
-
-## Follow Speed
-
-Control how quickly the camera catches up:
-
-```javascript
-// Smooth following (0 = instant, 1 = normal, <1 = slower)
-game.camera.follow(player, { x: 0, y: 0 }, 0.5);  // Slower, cinematic
-
-// Fast following
-game.camera.follow(player, { x: 0, y: 0 }, 2.0);  // Quick response
-```
-
-## Stop Following
-
-Stop camera follow:
-
-```javascript
-game.camera.stopFollow();
-```
-
-## Zoom
-
-Control camera zoom level:
-
-```codemirror
-import { Game, Scene, Sprite, Text } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const player = new Sprite({
-  x: 200,
-  y: 150,
-  width: 40,
-  height: 40,
-  color: '#e94560',
-  radius: 20
-});
-
-const zoomInBtn = new Sprite({
-  x: 80,
-  y: 40,
-  width: 70,
-  height: 35,
-  color: '#4fc3f7',
-  radius: 8,
-  interactive: true
-});
-
-const zoomInLabel = new Text({
-  text: 'Zoom In',
-  fontSize: 12,
-  color: '#fff',
-  align: 'center',
-  baseline: 'middle'
-});
-
-zoomInBtn.addChild(zoomInLabel);
-
-const zoomOutBtn = new Sprite({
-  x: 160,
-  y: 40,
-  width: 80,
-  height: 35,
-  color: '#51cf66',
-  radius: 8,
-  interactive: true
-});
-
-const zoomOutLabel = new Text({
-  text: 'Zoom Out',
-  fontSize: 12,
-  color: '#fff',
-  align: 'center',
-  baseline: 'middle'
-});
-
-zoomOutBtn.addChild(zoomOutLabel);
-
-const resetBtn = new Sprite({
-  x: 250,
-  y: 40,
-  width: 60,
-  height: 35,
-  color: '#888',
-  radius: 8,
-  interactive: true
-});
-
-const resetLabel = new Text({
-  text: 'Reset',
-  fontSize: 12,
-  color: '#fff',
-  align: 'center',
-  baseline: 'middle'
-});
-
-resetBtn.addChild(resetLabel);
-
-scene.add(player);
-scene.add(zoomInBtn);
-scene.add(zoomOutBtn);
-scene.add(resetBtn);
-
-zoomInBtn.on('tap', () => {
-  game.camera.setZoom(game.camera.zoom * 1.2);
-});
-
-zoomOutBtn.on('tap', () => {
-  game.camera.setZoom(game.camera.zoom / 1.2);
-});
-
-resetBtn.on('tap', () => {
-  game.camera.setZoom(1);
-});
-
-game.setScene(scene);
-game.start();
-```
-
-## Manual Positioning
-
-Set camera position directly:
-
-```javascript
-// Center on specific coordinates
-game.camera.setPosition(500, 300);
-
-// Pan to position with tweening
-const currentX = game.camera.x;
-const currentY = game.camera.y;
-
-// Manually tween camera (camera itself doesn't have .tween())
-function panTo(targetX, targetY, duration = 1000) {
-  const startX = game.camera.x;
-  const startY = game.camera.y;
-  const startTime = Date.now();
-
-  function update() {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    game.camera.x = startX + (targetX - startX) * progress;
-    game.camera.y = startY + (targetY - startY) * progress;
-
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    }
-  }
-
-  update();
-}
-
-panTo(500, 300);
-```
-
-## Screen Shake
+## Screen Shake Example
 
 Add screen shake for impacts and effects:
 
@@ -352,42 +386,60 @@ game.setScene(scene);
 game.start();
 ```
 
-### Shake Parameters
+## Zoom Control
+
+Control camera zoom programmatically:
 
 ```javascript
-// Subtle shake
-game.camera.shake(5, 200);
+// Zoom in gradually
+const zoomIn = () => {
+  const newZoom = Math.min(3, game.camera.zoom * 1.2);
+  game.camera.setZoom(newZoom);
+};
 
-// Medium shake (default)
-game.camera.shake(10, 300);
+// Zoom out gradually
+const zoomOut = () => {
+  const newZoom = Math.max(0.5, game.camera.zoom / 1.2);
+  game.camera.setZoom(newZoom);
+};
 
-// Intense shake
-game.camera.shake(20, 500);
+// Reset zoom
+const resetZoom = () => {
+  game.camera.setZoom(1);
+};
 ```
 
 ## Common Patterns
 
-### Player Follow with Boundaries
+### Camera Boundaries
 
 Constrain camera to level boundaries:
 
 ```javascript
 game.camera.follow(player);
 
-// In update loop or after following
 scene.on('update', () => {
-  // Constrain camera to level boundaries
+  // Define level size
   const levelWidth = 2000;
   const levelHeight = 1500;
-  const halfWidth = game.canvas.width / 2;
-  const halfHeight = game.canvas.height / 2;
 
-  game.camera.x = Math.max(halfWidth, Math.min(levelWidth - halfWidth, game.camera.x));
-  game.camera.y = Math.max(halfHeight, Math.min(levelHeight - halfHeight, game.camera.y));
+  // Calculate boundaries
+  const halfWidth = game.width / 2;
+  const halfHeight = game.height / 2;
+
+  // Clamp camera position
+  game.camera.x = Math.max(
+    halfWidth,
+    Math.min(levelWidth - halfWidth, game.camera.x)
+  );
+  game.camera.y = Math.max(
+    halfHeight,
+    Math.min(levelHeight - halfHeight, game.camera.y)
+  );
 });
 ```
 
-### Zoom on Scroll
+### Zoom on Mouse Wheel
 
 Zoom with mouse wheel:
 
@@ -398,9 +450,8 @@ game.canvas.addEventListener('wheel', (event) => {
   const zoomSpeed = 0.1;
   const delta = -Math.sign(event.deltaY);
 
-  game.camera.setZoom(
-    Math.max(0.5, Math.min(3, game.camera.zoom + delta * zoomSpeed))
-  );
+  const newZoom = game.camera.zoom + delta * zoomSpeed;
+  game.camera.setZoom(Math.max(0.5, Math.min(3, newZoom)));
 });
 ```
 
@@ -424,45 +475,65 @@ game.camera.follow(player, {
 }, 0.5);
 ```
 
-### Cutscene Camera
+### Smooth Zoom Transition
 
-Scripted camera movements:
+Animate zoom changes smoothly:
 
 ```javascript
-async function cutscene() {
-  // Stop following player
-  game.camera.stopFollow();
+function smoothZoom(targetZoom, duration = 500) {
+  const startZoom = game.camera.zoom;
+  const startTime = Date.now();
 
-  // Pan to location 1
-  await panTo(500, 300, 2000);
+  function update() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
 
-  // Zoom in
-  await new Promise(resolve => {
-    const startZoom = game.camera.zoom;
-    const targetZoom = 2;
-    const duration = 1000;
-    const startTime = Date.now();
+    // Use easing for smooth feel (easeOutCubic)
+    const eased = 1 - Math.pow(1 - progress, 3);
+    game.camera.setZoom(startZoom + (targetZoom - startZoom) * eased);
 
-    function update() {
-      const progress = Math.min((Date.now() - startTime) / duration, 1);
-      game.camera.setZoom(startZoom + (targetZoom - startZoom) * progress);
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      } else {
-        resolve();
-      }
+    if (progress < 1) {
+      requestAnimationFrame(update);
     }
+  }
 
-    update();
-  });
-
-  // Pan to location 2
-  await panTo(800, 600, 2000);
-
-  // Resume following player
-  game.camera.follow(player);
+  update();
 }
+
+// Usage
+smoothZoom(2.0);  // Zoom to 2x smoothly
+```
+
+### Smooth Pan Transition
+
+Animate camera movement:
+
+```javascript
+function panTo(targetX, targetY, duration = 1000) {
+  const startX = game.camera.x;
+  const startY = game.camera.y;
+  const startTime = Date.now();
+
+  function update() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Use easing for smooth movement
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    game.camera.x = startX + (targetX - startX) * eased;
+    game.camera.y = startY + (targetY - startY) * eased;
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+
+  update();
+}
+
+// Usage
+panTo(500, 300, 2000);  // Pan to position over 2 seconds
 ```
 
 ### Impact Shake
@@ -486,46 +557,17 @@ boss.on('stomp', () => {
 });
 ```
 
-### Smooth Zoom Transition
-
-Animate zoom changes:
-
-```javascript
-function smoothZoom(targetZoom, duration = 500) {
-  const startZoom = game.camera.zoom;
-  const startTime = Date.now();
-
-  function update() {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    // Use easing for smooth feel
-    const eased = 1 - Math.pow(1 - progress, 3);  // easeOutCubic
-    game.camera.setZoom(startZoom + (targetZoom - startZoom) * eased);
-
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    }
-  }
-
-  update();
-}
-
-// Usage
-smoothZoom(2.0);  // Zoom to 2x smoothly
-```
-
 ### Drag to Pan Camera
 
-Pan camera by dragging canvas:
+Pan camera by dragging the canvas:
 
 ```javascript
 let isDragging = false;
-let dragStart = { x: 0, y: 0 };
 
 game.on('dragstart', (event) => {
   isDragging = true;
-  dragStart = { x: event.position.x, y: event.position.y };
+  // Stop following while dragging
+  game.camera.stopFollow();
 });
 
 game.on('drag', (event) => {
@@ -540,61 +582,61 @@ game.on('dragend', () => {
 });
 ```
 
-### Split Screen Effect
+### Cutscene Camera
 
-Create split-screen by rendering twice with different camera positions:
-
-```javascript
-// This is advanced - requires custom rendering
-// Not directly supported but possible with manual rendering
-```
-
-## Camera Properties
-
-Direct property access:
+Scripted camera movements for cutscenes:
 
 ```javascript
-// Position
-console.log(game.camera.x, game.camera.y);
+async function cutscene() {
+  // Stop following player
+  game.camera.stopFollow();
 
-// Zoom level (1 = normal, 2 = 2x zoom, 0.5 = zoomed out)
-console.log(game.camera.zoom);
+  // Pan to location 1
+  await panTo(500, 300, 2000);
 
-// Rotation (in radians)
-game.camera.rotation = Math.PI / 4;  // 45 degrees
+  // Wait
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
-// Size (read-only, matches canvas)
-console.log(game.camera.width, game.camera.height);
+  // Zoom in smoothly
+  await new Promise(resolve => {
+    smoothZoom(2, 1000);
+    setTimeout(resolve, 1000);
+  });
+
+  // Pan to location 2
+  await panTo(800, 600, 2000);
+
+  // Zoom out
+  await new Promise(resolve => {
+    smoothZoom(1, 1000);
+    setTimeout(resolve, 1000);
+  });
+
+  // Resume following player
+  game.camera.follow(player);
+}
+
+// Trigger cutscene
+cutscene();
 ```
 
-## Coordinate Conversion
+## Best Practices
 
-Convert between screen and world coordinates:
-
-```javascript
-// Screen to world (useful for mouse/touch input)
-const worldPos = game.camera.screenToWorld(mouseX, mouseY);
-
-// World to screen (useful for UI overlays)
-const screenPos = game.camera.worldToScreen(entity.x, entity.y);
-```
-
-## Tips
-
-- **Use follow for player cameras** - Smoother than manual updates
-- **Constrain zoom** - Prevent users from zooming too far in/out
-- **Shake sparingly** - Too much shake is disorienting
-- **Consider boundaries** - Prevent camera from showing empty space
-- **Follow speed matters** - 0.5-1.0 feels cinematic, 1.5-2.0 feels responsive
+1. **Use follow for player cameras** - Smoother and easier than manual updates
+2. **Constrain zoom** - Prevent users from zooming too far in/out (recommend 0.5 to 3.0 range)
+3. **Shake sparingly** - Too much shake is disorienting; reserve for significant impacts
+4. **Consider boundaries** - Prevent camera from showing empty space beyond level edges
+5. **Follow speed matters** - `0.5-1.0` feels cinematic, `1.5-2.0` feels responsive
+6. **Stop following when needed** - Stop camera follow during cutscenes or scene transitions
 
 ## Common Mistakes
 
-### Forgetting to stop follow
+### Forgetting to Stop Follow
 
 ```javascript
-// ❌ Wrong - camera still follows old target
+// ❌ Wrong - camera still tries to follow old target
 game.setScene(newScene);
-game.camera.follow(newPlayer);  // Follows old player too!
+game.camera.follow(newPlayer);  // Might still track old player
 
 // ✅ Right - stop following first
 game.camera.stopFollow();
@@ -602,23 +644,36 @@ game.setScene(newScene);
 game.camera.follow(newPlayer);
 ```
 
-### Zoom limits
+### No Zoom Limits
 
 ```javascript
-// ❌ Wrong - no limits
+// ❌ Wrong - no limits, can zoom infinitely
 zoomInButton.on('tap', () => {
-  game.camera.setZoom(game.camera.zoom * 2);  // Can zoom infinitely
+  game.camera.setZoom(game.camera.zoom * 2);
 });
 
-// ✅ Right - clamp zoom
+// ✅ Right - clamp zoom to reasonable range
 zoomInButton.on('tap', () => {
   const newZoom = Math.min(3, game.camera.zoom * 1.5);
   game.camera.setZoom(newZoom);
 });
 ```
 
+### Setting Position While Following
+
+```javascript
+// ❌ Wrong - position gets overridden by follow
+game.camera.follow(player);
+game.camera.setPosition(500, 300);  // Immediately overridden
+
+// ✅ Right - stop following first, or don't use both
+game.camera.stopFollow();
+game.camera.setPosition(500, 300);
+```
+
 ## Next Steps
 
-- [Scenes](/core/scenes) - Manage game scenes
-- [Entities](/core/entities) - Create game objects
+- [Scenes](/core/scenes) - Manage game scenes and transitions
+- [Entities](/core/entities) - Create game objects to follow
 - [Tweening](/animation/tweening) - Animate camera movements
+- [Game Configuration](/core/game) - Configure your game instance

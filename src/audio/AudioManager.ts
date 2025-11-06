@@ -32,6 +32,7 @@ class Sound {
 export class AudioManager {
   private sounds: Map<string, Sound> = new Map();
   private music: HTMLAudioElement | null = null;
+  private musicTrackVolume: number = 1; // Per-track volume for current music
   private masterVolume: number = 1;
   private musicVolume: number = 1;
   private sfxVolume: number = 1;
@@ -86,8 +87,11 @@ export class AudioManager {
     // Stop existing music
     this.stopMusic();
 
+    // Store per-track volume for this music track
+    this.musicTrackVolume = options.volume ?? 1;
+
     this.music = new Audio(src);
-    this.music.volume = (options.volume ?? 1) * this.musicVolume * this.masterVolume;
+    this.music.volume = this.musicTrackVolume * this.musicVolume * this.masterVolume;
     this.music.loop = options.loop ?? true;
     this.music.playbackRate = options.rate ?? 1;
     this.music.play().catch(err => console.warn('Music play failed:', err));
@@ -101,6 +105,7 @@ export class AudioManager {
       this.music.pause();
       this.music.currentTime = 0;
       this.music = null;
+      this.musicTrackVolume = 1; // Reset track volume
     }
   }
 
@@ -128,7 +133,7 @@ export class AudioManager {
   setMasterVolume(volume: number): void {
     this.masterVolume = Math.max(0, Math.min(1, volume));
     if (this.music) {
-      this.music.volume = this.musicVolume * this.masterVolume;
+      this.music.volume = this.musicTrackVolume * this.musicVolume * this.masterVolume;
     }
   }
 
@@ -145,7 +150,7 @@ export class AudioManager {
   setMusicVolume(volume: number): void {
     this.musicVolume = Math.max(0, Math.min(1, volume));
     if (this.music) {
-      this.music.volume = this.musicVolume * this.masterVolume;
+      this.music.volume = this.musicTrackVolume * this.musicVolume * this.masterVolume;
     }
   }
 

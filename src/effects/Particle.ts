@@ -14,39 +14,35 @@ export interface ParticleOptions {
 
 /**
  * Single particle entity
+ * Uses Entity's built-in physics system (vx, vy, gravity, friction)
  */
 export class Particle extends Entity {
-  public velocity: Point;
   public color: string;
   public size: number;
   public lifetime: number;
   public age: number = 0;
-  public gravity: number;
-  public friction: number;
 
   constructor(options: ParticleOptions) {
-    super(options);
+    // Convert Point velocity to vx/vy for Entity physics
+    const velocity = options.velocity ?? { x: 0, y: 0 };
+    const size = options.size ?? 4;
 
-    this.velocity = options.velocity ?? { x: 0, y: 0 };
+    super({
+      ...options,
+      width: size * 2,   // Set width/height for physics calculations
+      height: size * 2,
+      vx: velocity.x,
+      vy: velocity.y,
+      gravity: options.gravity ?? 0,
+      friction: options.friction ?? 1
+    });
+
     this.color = options.color ?? '#ffffff';
-    this.size = options.size ?? 4;
+    this.size = size;
     this.lifetime = options.lifetime ?? 1;
-    this.gravity = options.gravity ?? 0;
-    this.friction = options.friction ?? 1;
   }
 
   update(deltaTime: number): void {
-    // Apply velocity
-    this.x += this.velocity.x * deltaTime;
-    this.y += this.velocity.y * deltaTime;
-
-    // Apply gravity
-    this.velocity.y += this.gravity * deltaTime;
-
-    // Apply friction
-    this.velocity.x *= this.friction;
-    this.velocity.y *= this.friction;
-
     // Age the particle
     this.age += deltaTime;
 
@@ -58,6 +54,7 @@ export class Particle extends Entity {
       this.destroy();
     }
 
+    // Entity.update handles physics integration automatically
     super.update(deltaTime);
   }
 
@@ -107,13 +104,16 @@ export class ParticleEmitter extends Entity {
   }
 
   update(deltaTime: number): void {
-    this.timeSinceEmit += deltaTime;
+    // Only emit if rate is greater than 0
+    if (this.rate > 0) {
+      this.timeSinceEmit += deltaTime;
 
-    const emitInterval = 1 / this.rate;
+      const emitInterval = 1 / this.rate;
 
-    while (this.timeSinceEmit >= emitInterval) {
-      this.emitParticle();
-      this.timeSinceEmit -= emitInterval;
+      while (this.timeSinceEmit >= emitInterval) {
+        this.emitParticle();
+        this.timeSinceEmit -= emitInterval;
+      }
     }
 
     super.update(deltaTime);

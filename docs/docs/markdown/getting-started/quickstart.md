@@ -138,8 +138,8 @@ Make entities interactive by setting `interactive: true` and listening for gestu
 sprite.interactive = true;
 sprite.on('tap', () => console.log('Tapped!'));
 sprite.on('drag', (e) => {
-  sprite.x = e.x;
-  sprite.y = e.y;
+  sprite.x += e.delta.x;
+  sprite.y += e.delta.y;
 });
 ```
 
@@ -161,4 +161,4 @@ You now know the basics! Explore these topics next:
 - [Architecture](/core/architecture) - Understand how Zap is structured
 - [Game Configuration](/core/game) - Learn all Game options
 - [Scenes](/core/scenes) - Manage multiple scenes and transitions
-- [Sprites](/visual/sprite) - Deep dive into visual entities
+- [Sprites](/visual/sprites) - Deep dive into visual entities

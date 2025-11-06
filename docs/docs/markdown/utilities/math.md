@@ -5,235 +5,170 @@ description: Helpful math functions for game development
 
 # Math Utilities
 
-Zap provides commonly-used math functions for clamping, interpolation, mapping ranges, and random generation.
+Zap provides commonly-used math functions for clamping, interpolation, mapping ranges, random generation, and vector operations.
 
-## Clamp
+## API Reference
 
-Constrain a value between minimum and maximum:
+### Basic Math
 
-```codemirror
-import { Game, Scene, Sprite, Text, MathZ } from '@VERSION';
+#### `clamp(value, min, max): number`
 
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const player = new Sprite({
-  x: 200,
-  y: 150,
-  width: 50,
-  height: 50,
-  color: '#e94560',
-  radius: 25,
-  interactive: true
-});
-
-const info = new Text({
-  text: 'Drag the circle',
-  x: 200,
-  y: 30,
-  fontSize: 14,
-  color: '#888',
-  align: 'center'
-});
-
-scene.add(player);
-scene.add(info);
-
-// Keep player within bounds
-player.on('drag', (event) => {
-  player.x = MathZ.clamp(player.x + event.delta.x, 50, 350);
-  player.y = MathZ.clamp(player.y + event.delta.y, 50, 250);
-});
-
-game.setScene(scene);
-game.start();
-```
-
-## Lerp (Linear Interpolation)
-
-Blend smoothly between two values:
-
-```codemirror
-import { Game, Scene, Sprite, MathZ } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const target = new Sprite({
-  x: 350,
-  y: 150,
-  width: 40,
-  height: 40,
-  color: '#51cf66',
-  radius: 20
-});
-
-const follower = new Sprite({
-  x: 50,
-  y: 150,
-  width: 30,
-  height: 30,
-  color: '#4fc3f7',
-  radius: 15
-});
-
-scene.add(target);
-scene.add(follower);
-
-// Smoothly follow target
-scene.on('update', () => {
-  follower.x = MathZ.lerp(follower.x, target.x, 0.05);
-  follower.y = MathZ.lerp(follower.y, target.y, 0.05);
-});
-
-// Move target with mouse
-game.on('drag', (event) => {
-  target.x = event.position.x;
-  target.y = event.position.y;
-});
-
-game.setScene(scene);
-game.start();
-```
-
-## Map Range
-
-Convert a value from one range to another:
+Constrain a value between min and max.
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
-
-// Map mouse X (0-400) to rotation (0-2π)
-const mouseX = 200;
-const rotation = MathZ.map(mouseX, 0, 400, 0, Math.PI * 2);
-
-// Map health (0-100) to color (red to green)
-const health = 75;
-const greenValue = MathZ.map(health, 0, 100, 0, 255);
-
-// Map distance (0-500) to volume (1.0-0.0)
-const distance = 250;
-const volume = MathZ.map(distance, 0, 500, 1.0, 0.0);
+MathZ.clamp(150, 0, 100);   // 100
+MathZ.clamp(-10, 0, 100);   // 0
+MathZ.clamp(50, 0, 100);    // 50
 ```
 
-## Random Integer
+#### `lerp(start, end, t): number`
 
-Generate random whole numbers:
-
-```codemirror
-import { Game, Scene, Text, MathZ } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const result = new Text({
-  text: 'Click to roll dice',
-  x: 200,
-  y: 120,
-  fontSize: 32,
-  color: '#4fc3f7',
-  align: 'center'
-});
-
-const instruction = new Text({
-  text: 'Click anywhere',
-  x: 200,
-  y: 180,
-  fontSize: 14,
-  color: '#888',
-  align: 'center'
-});
-
-scene.add(result);
-scene.add(instruction);
-
-game.on('tap', () => {
-  const roll = MathZ.randomInt(1, 6);
-  result.text = `Rolled: ${roll}`;
-});
-
-game.setScene(scene);
-game.start();
-```
-
-## Random Float
-
-Generate random decimal numbers:
+Linear interpolation between two values. `t` is typically 0-1.
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
+MathZ.lerp(0, 100, 0);     // 0
+MathZ.lerp(0, 100, 0.5);   // 50
+MathZ.lerp(0, 100, 1);     // 100
 
-// Random speed between 50 and 150
-const speed = MathZ.randomFloat(50, 150);
-
-// Random opacity
-const alpha = MathZ.randomFloat(0.5, 1.0);
-
-// Random position
-const x = MathZ.randomFloat(0, game.canvas.width);
-const y = MathZ.randomFloat(0, game.canvas.height);
+// Smooth camera follow
+camera.x = MathZ.lerp(camera.x, player.x, 0.1);
 ```
 
-## Random Item
+#### `map(value, inMin, inMax, outMin, outMax): number`
 
-Pick a random element from an array:
+Map a value from one range to another.
 
-```codemirror
-import { Game, Scene, Sprite, Text, MathZ } from '@VERSION';
+```javascript
+MathZ.map(50, 0, 100, 0, 1);           // 0.5
+MathZ.map(200, 0, 400, 0, Math.PI*2);  // π
+MathZ.map(75, 0, 100, 0, 255);         // 191.25
 
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
+// Map health to color hue
+const hue = MathZ.map(health, 0, 100, 0, 120);  // 0=red, 120=green
+```
 
-const scene = new Scene();
+### Random Functions
 
-const colors = ['#e94560', '#4fc3f7', '#51cf66', '#f39c12', '#9b59b6'];
+#### `randomInt(min, max): number`
 
-const box = new Sprite({
-  x: 200,
-  y: 120,
-  width: 100,
-  height: 100,
-  color: '#4fc3f7',
-  radius: 12,
-  interactive: true
-});
+Generate random integer (inclusive on both ends).
 
-const label = new Text({
-  text: 'Click to change color',
-  x: 200,
-  y: 200,
-  fontSize: 14,
-  color: '#888',
-  align: 'center'
-});
+```javascript
+MathZ.randomInt(1, 6);     // 1, 2, 3, 4, 5, or 6
+MathZ.randomInt(0, 10);    // 0 through 10
+```
 
-scene.add(box);
-scene.add(label);
+#### `randomFloat(min, max): number`
 
-box.on('tap', () => {
-  box.color = MathZ.randomItem(colors);
-});
+Generate random float.
 
-game.setScene(scene);
-game.start();
+```javascript
+MathZ.randomFloat(0, 1);      // 0.0 to 1.0
+MathZ.randomFloat(50, 150);   // 50.0 to 150.0
+```
+
+#### `randomItem<T>(items: T[]): T`
+
+Pick random item from array.
+
+```javascript
+MathZ.randomItem([1, 2, 3, 4, 5]);
+MathZ.randomItem(['red', 'blue', 'green']);
+MathZ.randomItem([weapon1, weapon2, weapon3]);
+```
+
+### Distance Functions
+
+#### `distance(x1, y1, x2, y2): number`
+
+Calculate distance between two points.
+
+```javascript
+const dist = MathZ.distance(0, 0, 3, 4);  // 5
+
+// Distance from player to enemy
+const dist = MathZ.distance(player.x, player.y, enemy.x, enemy.y);
+```
+
+#### `distanceSquared(x1, y1, x2, y2): number`
+
+Squared distance (faster, no square root). Use for comparisons.
+
+```javascript
+// Check if entities are close (faster than distance())
+if (MathZ.distanceSquared(a.x, a.y, b.x, b.y) < 100 * 100) {
+  // Within 100 pixels
+}
+```
+
+### Vector Operations
+
+#### `length(x, y): number`
+
+Calculate vector magnitude/length.
+
+```javascript
+const len = MathZ.length(3, 4);  // 5
+
+// Speed of moving object
+const speed = MathZ.length(velocityX, velocityY);
+```
+
+#### `lengthSquared(x, y): number`
+
+Squared magnitude (faster, no square root).
+
+```javascript
+// Check if moving fast enough
+if (MathZ.lengthSquared(vx, vy) > minSpeed * minSpeed) {
+  // Fast enough
+}
+```
+
+#### `normalize(x, y): { x: number, y: number }`
+
+Normalize vector to length 1. Returns `{x: 0, y: 0}` if length is 0.
+
+```javascript
+const dir = MathZ.normalize(targetX - playerX, targetY - playerY);
+// Move in direction
+player.x += dir.x * speed * deltaTime;
+player.y += dir.y * speed * deltaTime;
+```
+
+#### `dot(x1, y1, x2, y2): number`
+
+Dot product of two vectors.
+
+```javascript
+const dot = MathZ.dot(v1x, v1y, v2x, v2y);
+
+// Check if facing target (> 0 means same direction)
+const facingDir = MathZ.dot(lookX, lookY, toTargetX, toTargetY);
+```
+
+### Rotation Functions
+
+#### `rotate(x, y, angle): { x: number, y: number }`
+
+Rotate a point around origin by angle (radians).
+
+```javascript
+const rotated = MathZ.rotate(10, 0, Math.PI / 2);  // Rotate 90°
+// rotated = { x: 0, y: 10 }
+```
+
+#### `rotateAround(x, y, centerX, centerY, angle): { x: number, y: number }`
+
+Rotate a point around a specific center point.
+
+```javascript
+// Rotate point around (200, 150) by 45 degrees
+const rotated = MathZ.rotateAround(
+  pointX, pointY,
+  200, 150,
+  Math.PI / 4
+);
 ```
 
 ## Common Patterns
@@ -241,330 +176,75 @@ game.start();
 ### Smooth Camera Follow
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
-
 scene.on('update', () => {
-  // Smoothly follow player (0.1 = smooth, 1.0 = instant)
-  game.camera.x = MathZ.lerp(game.camera.x, player.x, 0.1);
-  game.camera.y = MathZ.lerp(game.camera.y, player.y, 0.1);
+  camera.x = MathZ.lerp(camera.x, player.x, 0.1);
+  camera.y = MathZ.lerp(camera.y, player.y, 0.1);
 });
 ```
 
 ### Health Bar Color
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
-
 function getHealthColor(health, maxHealth) {
-  // Clamp health to valid range
-  health = MathZ.clamp(health, 0, maxHealth);
-
-  // Map health to hue (0=red, 120=green)
-  const hue = MathZ.map(health, 0, maxHealth, 0, 120);
-
+  const hue = MathZ.map(
+    MathZ.clamp(health, 0, maxHealth),
+    0, maxHealth,
+    0, 120  // Red to green
+  );
   return `hsl(${hue}, 70%, 50%)`;
 }
-
-healthBar.color = getHealthColor(player.health, 100);
 ```
 
 ### Distance-Based Volume
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
+const dist = MathZ.distance(player.x, player.y, soundX, soundY);
+const volume = MathZ.map(
+  MathZ.clamp(dist, 0, 500),
+  0, 500,
+  1.0, 0.0
+);
+```
 
-function getVolumeByDistance(distance, maxDistance = 500) {
-  const clampedDistance = MathZ.clamp(distance, 0, maxDistance);
-  return MathZ.map(clampedDistance, 0, maxDistance, 1.0, 0.0);
+### Move Toward Target
+
+```javascript
+// Normalize direction and move at constant speed
+const dir = MathZ.normalize(targetX - x, targetY - y);
+x += dir.x * speed * deltaTime;
+y += dir.y * speed * deltaTime;
+```
+
+### Collision Detection
+
+```javascript
+// Use distanceSquared for performance
+const minDist = entity1.radius + entity2.radius;
+if (MathZ.distanceSquared(e1.x, e1.y, e2.x, e2.y) < minDist * minDist) {
+  // Collision!
 }
-
-const dx = player.x - sound.x;
-const dy = player.y - sound.y;
-const distance = Math.sqrt(dx * dx + dy * dy);
-
-sound.volume = getVolumeByDistance(distance);
 ```
 
 ### Random Enemy Spawn
 
 ```javascript
-import { MathZ } from '@mode-7/zap';
-
-function spawnEnemy() {
-  const types = ['zombie', 'skeleton', 'ghost'];
-  const type = MathZ.randomItem(types);
-
-  const enemy = new Sprite({
-    x: MathZ.randomInt(50, 350),
-    y: MathZ.randomInt(50, 250),
-    width: 40,
-    height: 40,
-    image: assetLoader.getImage(type)
-  });
-
-  enemy.speed = MathZ.randomFloat(50, 150);
-  enemy.health = MathZ.randomInt(20, 50);
-
-  scene.add(enemy);
-}
-```
-
-### Constrain to Bounds
-
-```javascript
-import { clamp } from '@mode-7/zap';
-
-scene.on('update', (deltaTime) => {
-  // Move player
-  player.x += velocity.x * deltaTime;
-  player.y += velocity.y * deltaTime;
-
-  // Keep within game bounds
-  player.x = MathZ.clamp(player.x, 0, game.canvas.width);
-  player.y = MathZ.clamp(player.y, 0, game.canvas.height);
+const types = ['zombie', 'skeleton', 'ghost'];
+const enemy = new Sprite({
+  x: MathZ.randomInt(50, 350),
+  y: MathZ.randomInt(50, 250),
+  image: MathZ.randomItem(types)
 });
-```
-
-### Smooth Rotation
-
-```javascript
-import { lerp } from '@mode-7/zap';
-
-scene.on('update', () => {
-  // Calculate target angle to mouse
-  const dx = mouse.x - sprite.x;
-  const dy = mouse.y - sprite.y;
-  const targetAngle = Math.atan2(dy, dx);
-
-  // Smoothly rotate toward target
-  sprite.rotation = MathZ.lerp(sprite.rotation, targetAngle, 0.1);
-});
-```
-
-### Random Particle Spawn
-
-```javascript
-import { MathZ } from '@mode-7/zap';
-
-function createParticle(x, y) {
-  const colors = ['#ff6b6b', '#f39c12', '#f1c40f'];
-
-  const particle = new Particle({
-    x,
-    y,
-    velocity: {
-      x: MathZ.randomFloat(-100, 100),
-      y: MathZ.randomFloat(-150, -50)
-    },
-    color: MathZ.randomItem(colors),
-    size: MathZ.randomFloat(4, 10),
-    lifetime: MathZ.randomFloat(0.5, 1.5)
-  });
-
-  scene.add(particle);
-}
-```
-
-### Map Joystick to Speed
-
-```javascript
-import { map } from '@mode-7/zap';
-
-// Joystick gives -1 to 1
-const joystickX = 0.7;
-
-// Map to speed (-200 to 200)
-const speedX = MathZ.map(joystickX, -1, 1, -200, 200);
-
-player.velocityX = speedX;
-```
-
-### Difficulty Scaling
-
-```javascript
-import { MathZ } from '@mode-7/zap';
-
-function getDifficulty(level) {
-  // Clamp level to reasonable range
-  level = MathZ.clamp(level, 1, 50);
-
-  return {
-    enemyCount: Math.floor(MathZ.map(level, 1, 50, 3, 20)),
-    enemySpeed: MathZ.map(level, 1, 50, 50, 200),
-    enemyHealth: Math.floor(MathZ.map(level, 1, 50, 20, 200)),
-    spawnRate: MathZ.map(level, 1, 50, 3000, 500)
-  };
-}
-
-const difficulty = getDifficulty(currentLevel);
-```
-
-### Screenshake Intensity
-
-```javascript
-import { MathZ } from '@mode-7/zap';
-
-function shake(damage) {
-  // Map damage (0-100) to intensity (0-20)
-  const intensity = MathZ.map(MathZ.clamp(damage, 0, 100), 0, 100, 0, 20);
-  const duration = MathZ.map(MathZ.clamp(damage, 0, 100), 0, 100, 200, 600);
-
-  game.camera.shake(intensity, duration);
-}
-```
-
-### Random Color Generation
-
-```javascript
-import { MathZ } from '@mode-7/zap';
-
-function randomColor() {
-  const r = MathZ.randomInt(0, 255);
-  const g = MathZ.randomInt(0, 255);
-  const b = MathZ.randomInt(0, 255);
-
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-sprite.color = randomColor();
-```
-
-### Weighted Random Choice
-
-```javascript
-import { randomFloat } from '@mode-7/zap';
-
-function weightedRandom(items, weights) {
-  const total = weights.reduce((sum, w) => sum + w, 0);
-  let random = MathZ.randomFloat(0, total);
-
-  for (let i = 0; i < items.length; i++) {
-    random -= weights[i];
-    if (random <= 0) {
-      return items[i];
-    }
-  }
-
-  return items[items.length - 1];
-}
-
-// 70% common, 25% rare, 5% legendary
-const loot = weightedRandom(
-  ['common', 'rare', 'legendary'],
-  [70, 25, 5]
-);
-```
-
-## API Reference
-
-### `clamp(value, min, max)`
-
-Constrain a value between min and max.
-
-**Parameters**:
-- `value` (number) - Value to clamp
-- `min` (number) - Minimum value
-- `max` (number) - Maximum value
-
-**Returns**: number
-
-```javascript
-clamp(150, 0, 100);   // Returns 100
-clamp(-10, 0, 100);   // Returns 0
-clamp(50, 0, 100);    // Returns 50
-```
-
-### `lerp(start, end, t)`
-
-Linear interpolation between two values.
-
-**Parameters**:
-- `start` (number) - Start value
-- `end` (number) - End value
-- `t` (number) - Interpolation factor (0-1)
-
-**Returns**: number
-
-```javascript
-lerp(0, 100, 0);     // Returns 0
-lerp(0, 100, 0.5);   // Returns 50
-lerp(0, 100, 1);     // Returns 100
-lerp(0, 100, 0.25);  // Returns 25
-```
-
-### `map(value, inMin, inMax, outMin, outMax)`
-
-Map a value from one range to another.
-
-**Parameters**:
-- `value` (number) - Value to map
-- `inMin` (number) - Input range minimum
-- `inMax` (number) - Input range maximum
-- `outMin` (number) - Output range minimum
-- `outMax` (number) - Output range maximum
-
-**Returns**: number
-
-```javascript
-map(50, 0, 100, 0, 1);        // Returns 0.5
-map(200, 0, 400, 0, Math.PI * 2);  // Returns π
-map(75, 0, 100, 0, 255);      // Returns 191.25
-```
-
-### `randomInt(min, max)`
-
-Generate random integer (inclusive).
-
-**Parameters**:
-- `min` (number) - Minimum value (inclusive)
-- `max` (number) - Maximum value (inclusive)
-
-**Returns**: number
-
-```javascript
-randomInt(1, 6);     // Returns 1, 2, 3, 4, 5, or 6
-randomInt(0, 10);    // Returns 0 through 10
-randomInt(100, 200); // Returns 100 through 200
-```
-
-### `randomFloat(min, max)`
-
-Generate random float.
-
-**Parameters**:
-- `min` (number) - Minimum value
-- `max` (number) - Maximum value
-
-**Returns**: number
-
-```javascript
-randomFloat(0, 1);      // Returns 0.0 to 1.0
-randomFloat(50, 150);   // Returns 50.0 to 150.0
-randomFloat(-1, 1);     // Returns -1.0 to 1.0
-```
-
-### `randomItem(items)`
-
-Pick random item from array.
-
-**Parameters**:
-- `items` (T[]) - Array of items
-
-**Returns**: T
-
-```javascript
-randomItem([1, 2, 3, 4, 5]);           // Returns random number
-randomItem(['red', 'blue', 'green']);  // Returns random color
-randomItem([weapon1, weapon2]);        // Returns random weapon
+enemy.speed = MathZ.randomFloat(50, 150);
 ```
 
 ## Tips
 
-- **Use clamp for boundaries** - Prevent values from going out of range
-- **Use lerp for smooth motion** - Better than instant jumps
-- **Use map for conversions** - Convert between different value ranges
-- **Random for variety** - Add unpredictability to games
-- **Combine functions** - Use together for complex behaviors
+- **Use `clamp` for boundaries** - Prevent values going out of range
+- **Use `lerp` for smooth motion** - Better than instant jumps
+- **Use `map` for conversions** - Convert between different value ranges
+- **Use squared distance for comparisons** - Much faster, avoid `sqrt()`
+- **Normalize before moving** - Ensures constant speed in all directions
+- **Cache calculations** - Store `Math.PI` values, don't recalculate
 
 ## Common Mistakes
 
@@ -572,35 +252,38 @@ randomItem([weapon1, weapon2]);        // Returns random weapon
 
 ```javascript
 // ❌ Wrong - t should be 0-1
-const x = lerp(0, 100, 5);  // Overshoots to 500!
+const x = MathZ.lerp(0, 100, 5);  // Overshoots to 500!
 
 // ✅ Right - clamp t to 0-1
-const t = clamp(progress, 0, 1);
-const x = lerp(0, 100, t);
+const t = MathZ.clamp(progress, 0, 1);
+const x = MathZ.lerp(0, 100, t);
 ```
 
-### Map with inverted ranges
+### Forgetting to normalize
 
 ```javascript
-// ❌ Wrong - ranges don't match direction
-const volume = map(distance, 0, 500, 0, 1);  // Volume increases with distance!
+// ❌ Wrong - moves faster diagonally
+x += (targetX - x) * 0.1;
+y += (targetY - y) * 0.1;
 
-// ✅ Right - flip output range
-const volume = map(distance, 0, 500, 1, 0);  // Volume decreases with distance
+// ✅ Right - normalize for consistent speed
+const dir = MathZ.normalize(targetX - x, targetY - y);
+x += dir.x * speed * deltaTime;
+y += dir.y * speed * deltaTime;
 ```
 
-### randomInt off-by-one
+### Using distance() for comparisons
 
 ```javascript
-// ❌ Wrong - won't include 6
-const roll = randomInt(1, 5);  // Only 1-5
+// ❌ Slow - unnecessary square root
+if (MathZ.distance(x1, y1, x2, y2) < 100) { }
 
-// ✅ Right - inclusive max
-const roll = randomInt(1, 6);  // 1-6 (proper die roll)
+// ✅ Fast - use distanceSquared
+if (MathZ.distanceSquared(x1, y1, x2, y2) < 100 * 100) { }
 ```
 
 ## Next Steps
 
-- [Layout](/utilities/layout) - Uses math for positioning
+- [Layout](/utilities/layout) - Positioning helpers using math
 - [Tweening](/animation/tweening) - Smooth animations with lerp
 - [Camera](/core/camera) - Clamping and smooth following

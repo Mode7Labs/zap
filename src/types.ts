@@ -59,13 +59,22 @@ export interface SceneOptions {
 export interface EntityOptions extends Partial<Transform> {
   width?: number;
   height?: number;
+  radius?: number;
   anchorX?: number;
   anchorY?: number;
   zIndex?: number;
+  active?: boolean;
   interactive?: boolean;
   visible?: boolean;
   checkCollisions?: boolean;
   collisionTags?: string[];
+  // Physics properties
+  vx?: number;
+  vy?: number;
+  gravity?: number;
+  friction?: number;
+  bounciness?: number;
+  static?: boolean; // Mark as immovable (for walls, platforms, etc.)
 }
 
 export interface Animation {

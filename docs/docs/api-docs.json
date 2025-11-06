@@ -1,18 +1,9 @@
 {
   "version": "0.1.5",
-  "generated": "2025-10-21T08:16:06.207Z",
+  "generated": "2025-11-06T03:44:32.694Z",
   "repository": "https://github.com/Mode7Labs/zap",
   "description": "Complete Zap game engine documentation for AI assistants",
   "categories": {
-    "advanced": [
-      {
-        "slug": "advanced/collision-detection",
-        "title": "Collision Detection",
-        "description": "Detect overlaps and handle collisions between entities",
-        "path": "advanced/collision-detection.md",
-        "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/advanced/collision-detection.md"
-      }
-    ],
     "animation": [
       {
         "slug": "animation/particles",
@@ -149,6 +140,22 @@
         "description": "",
         "path": "index.md",
         "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/index.md"
+      }
+    ],
+    "physics": [
+      {
+        "slug": "physics/collision-detection",
+        "title": "Collision Detection",
+        "description": "Detect overlaps and handle collisions between entities",
+        "path": "physics/collision-detection.md",
+        "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/physics/collision-detection.md"
+      },
+      {
+        "slug": "physics/physics",
+        "title": "Physics",
+        "description": "Built-in velocity, gravity, and friction for realistic movement",
+        "path": "physics/physics.md",
+        "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/physics/physics.md"
       }
     ],
     "ui": [

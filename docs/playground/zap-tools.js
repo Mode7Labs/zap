@@ -5,16 +5,22 @@
 
 import { ZAP_CDN_URL } from './config.js';
 
-export const ZAP_SYSTEM_PROMPT = `You are the Zap Game Engine AI Assistant. You ONLY help users build games using the @mode-7/zap game engine.
+export const ZAP_SYSTEM_PROMPT = `You are the Zap Game Engine AI Assistant. You help users build games using the @mode-7/zap game engine through an ITERATIVE, STEP-BY-STEP approach.
+
+ITERATIVE WORKFLOW (REQUIRED):
+1. FIRST: Call create_plan to break the request into 3-8 small steps
+2. THEN: For each step, call apply_step with incremental code changes
+3. Each step will be tested immediately - if errors occur, you'll be notified and can fix them
+4. Continue until all steps are complete
 
 CRITICAL RULES:
 1. Use APIs from the CORE API REFERENCE below or from the CURRENT CODE the user provides
 2. NEVER hallucinate or guess API methods - if you haven't seen it in the docs or current code, it doesn't exist
 3. For NEW features not in CORE API REFERENCE, call get_zap_docs (but minimize tool calls)
 4. ALL code must import from '${ZAP_CDN_URL}' - use the EXACT import statement from current code or examples
-5. **PRESERVE EXISTING GAME CONFIG**: If the current code already has a Game instance, you MUST keep the exact same configuration (width, height, responsive, backgroundColor, parent) UNLESS the user specifically asks to change it. DO NOT randomly change dimensions to 1920x1080 or any other values.
+5. **PRESERVE EXISTING GAME CONFIG**: If the current code already has a Game instance, you MUST keep the exact same configuration (width, height, responsive, backgroundColor, parent) UNLESS the user specifically asks to change it.
 6. Use game.width and game.height for positioning (they stay constant with the specified dimensions)
-7. Only output JavaScript code - no markdown code blocks, no explanations, no template variables
+7. Each apply_step must contain COMPLETE, EXECUTABLE JavaScript code (not just a diff)
 
 FORBIDDEN - These APIs DO NOT exist in Zap (do not use):
 - getEntitiesByTag() - Use scene.getEntitiesByTag() instead
@@ -56,8 +62,12 @@ const sprite = new Sprite({
   width: 50, height: 50,
   color: '#ff0000',
   radius: 10,  // rounded corners
-  interactive: true
+  interactive: true,
+  anchorX: 0.5,  // 0.5 = center (DEFAULT), 0 = left edge, 1 = right edge
+  anchorY: 0.5   // 0.5 = center (DEFAULT), 0 = top edge, 1 = bottom edge
 });
+// IMPORTANT: Default anchor is (0.5, 0.5) - entities are positioned by their CENTER
+// For walls/UI elements aligned to edges, use anchorX: 0, anchorY: 0 (top-left corner)
 
 Text:
 const text = new Text({
@@ -80,11 +90,23 @@ entity.on('tap', () => {
   // Handle tap
 });
 
+Physics:
+entity.vx = 100;        // Horizontal velocity (pixels/sec)
+entity.vy = -200;       // Vertical velocity (pixels/sec)
+entity.gravity = 980;   // Gravity acceleration (pixels/sec²)
+entity.friction = 0.99; // Friction multiplier (0.99 = 1% loss)
+entity.bounce(normalX, normalY, restitution); // Bounce off surfaces
+
 Collision Detection:
 entity.checkCollisions = true;
 entity.collisionTags = ['enemy'];
 entity.on('collisionenter', (event) => {
   const other = event.other;
+  const normal = event.normal; // Collision normal { x, y } - direction to push entity away
+  // For rotated rectangles (e.g., flippers), use event.normal for accurate bounce:
+  if (other.hasTag('flipper')) {
+    entity.bounce(normal.x, normal.y, 0.9); // Use the computed normal!
+  }
 });
 
 Scene Methods:
@@ -110,7 +132,7 @@ MathZ.randomInt(min, max)
 MathZ.randomFloat(min, max)
 MathZ.randomItem(array)
 
-IMPORTANT: Only fetch additional docs if you need features NOT listed above (like particles, camera, tweening, etc.)
+IMPORTANT: Only fetch additional docs if you need features NOT listed above (like particles, camera, tweening, advanced physics scenarios, etc.)
 
 REQUIRED for catch/collection games:
 - Use entity.checkCollisions = true for collision detection
@@ -224,10 +246,15 @@ const TOPIC_TO_FILE = {
   'delay': 'utilities/timers',
   'interval': 'utilities/timers',
 
-  // Advanced
-  'collision': 'advanced/collision-detection',
-  'collision-detection': 'advanced/collision-detection',
-  'collisions': 'advanced/collision-detection'
+  // Physics
+  'physics': 'physics/physics',
+  'velocity': 'physics/physics',
+  'gravity': 'physics/physics',
+  'friction': 'physics/physics',
+  'bounce': 'physics/physics',
+  'collision': 'physics/collision-detection',
+  'collision-detection': 'physics/collision-detection',
+  'collisions': 'physics/collision-detection'
 };
 
 // Get all available topics
@@ -269,6 +296,58 @@ export const ZAP_TOOLS = [
           }
         },
         required: ['topic']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_plan',
+      description: 'REQUIRED FIRST STEP: Create a step-by-step implementation plan. This breaks down the user\'s request into small, incremental steps that will be executed one at a time. Each step should be simple and testable.',
+      parameters: {
+        type: 'object',
+        properties: {
+          steps: {
+            type: 'array',
+            description: 'Array of implementation steps in order. Each step should be small and focused (e.g., "Add game setup", "Add player sprite", "Add collision detection"). Aim for 3-8 steps.',
+            items: {
+              type: 'object',
+              properties: {
+                description: {
+                  type: 'string',
+                  description: 'Brief description of what this step does (shown to user)'
+                },
+                reasoning: {
+                  type: 'string',
+                  description: 'Internal note about why this step is needed and what it accomplishes'
+                }
+              },
+              required: ['description', 'reasoning']
+            }
+          }
+        },
+        required: ['steps']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'apply_step',
+      description: 'Apply a single implementation step to the code. This modifies the current code incrementally. The code will be tested immediately after applying.',
+      parameters: {
+        type: 'object',
+        properties: {
+          code: {
+            type: 'string',
+            description: 'The complete updated JavaScript code after applying this step. Must be valid, executable code that imports from the CDN.'
+          },
+          step_summary: {
+            type: 'string',
+            description: 'Brief summary of what changed in this step (e.g., "Added ball sprite with physics")'
+          }
+        },
+        required: ['code', 'step_summary']
       }
     }
   }
@@ -404,8 +483,9 @@ async function discoverDocs(query = '') {
     { topic: 'storage', category: 'Utilities', description: 'LocalStorage wrapper' },
     { topic: 'timers', category: 'Utilities', description: 'Delay and interval utilities' },
 
-    // Advanced
-    { topic: 'collision-detection', category: 'Advanced', description: 'AABB collision detection system' }
+    // Physics
+    { topic: 'physics', category: 'Physics', description: 'Built-in velocity, gravity, friction, and bounce' },
+    { topic: 'collision-detection', category: 'Physics', description: 'Shape-aware collision detection with events' }
   ];
 
   // Filter by query if provided
@@ -471,11 +551,15 @@ async function getTopicDocs(topic) {
  */
 export function handleToolCall(toolName, args) {
   if (toolName === 'discover_zap_docs') {
-    // Note: This returns a promise, but we'll return the result synchronously
-    // for the tool calling system. In the async flow, this will be awaited.
     return discoverDocs(args.query || '');
   } else if (toolName === 'get_zap_docs') {
     return getTopicDocs(args.topic);
+  } else if (toolName === 'create_plan') {
+    // Plan creation is handled in ai.js - just acknowledge receipt
+    return { success: true, plan: args.steps };
+  } else if (toolName === 'apply_step') {
+    // Step application is handled in ai.js - just acknowledge receipt
+    return { success: true, code: args.code, summary: args.step_summary };
   }
 
   return { error: 'Unknown tool' };

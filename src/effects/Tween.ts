@@ -44,14 +44,18 @@ export class Tween<T extends Record<string, any>> {
   update(deltaTime: number): void {
     if (!this.active || this.completed) return;
 
-    // Handle delay
-    if (this.delayElapsed < this.delay) {
-      this.delayElapsed += deltaTime * 1000;
-      return;
-    }
+    let timeToApply = deltaTime * 1000;
 
-    // Initialize start values on first update after delay
+    // Handle delay (only if animation hasn't started yet)
     if (!this.started) {
+      this.delayElapsed += timeToApply;
+      if (this.delayElapsed < this.delay) {
+        return; // Still in delay period
+      }
+      // Delay just finished, apply overflow time to animation
+      timeToApply = this.delayElapsed - this.delay;
+
+      // Initialize start values now that delay is complete
       for (const key in this.endValues) {
         this.startValues[key] = this.target[key];
       }
@@ -59,8 +63,8 @@ export class Tween<T extends Record<string, any>> {
     }
 
     // Update elapsed time
-    this.elapsed += deltaTime * 1000;
-    const progress = Math.min(this.elapsed / this.duration, 1);
+    this.elapsed += timeToApply;
+    const progress = this.duration === 0 ? 1 : Math.min(this.elapsed / this.duration, 1);
     const easedProgress = this.easing(progress);
 
     // Update target values

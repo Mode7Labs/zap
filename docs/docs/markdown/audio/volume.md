@@ -307,7 +307,7 @@ audioManager.mute();
 // Unmute all audio
 audioManager.unmute();
 
-// Toggle mute state
+// Toggle mute state (returns new muted state)
 const isMuted = audioManager.toggleMute();
 
 // Check if muted
@@ -315,6 +315,34 @@ if (audioManager.isMuted()) {
   console.log('Audio is muted');
 }
 ```
+
+## All Volume Methods
+
+Complete API reference:
+
+```javascript
+// Setters (all accept 0-1 range, clamped automatically)
+audioManager.setMasterVolume(0.8);  // Set master volume
+audioManager.setMusicVolume(0.6);   // Set music volume
+audioManager.setSFXVolume(0.7);     // Set SFX volume
+
+// Getters (return current volume as 0-1)
+audioManager.getMasterVolume();  // Returns: number
+audioManager.getMusicVolume();   // Returns: number
+audioManager.getSFXVolume();     // Returns: number
+
+// Mute controls
+audioManager.mute();          // Mute all audio
+audioManager.unmute();        // Unmute all audio
+audioManager.toggleMute();    // Returns: boolean (new muted state)
+audioManager.isMuted();       // Returns: boolean (current muted state)
+```
+
+**Default volumes:**
+- Master: `1.0` (100%)
+- Music: `1.0` (100%)
+- SFX: `1.0` (100%)
+- Muted: `false`
 
 ## Settings Menu
 

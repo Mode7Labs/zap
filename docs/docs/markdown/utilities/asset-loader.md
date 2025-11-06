@@ -234,65 +234,21 @@ await level1Loader.loadImages({
 
 ### Lazy Loading
 
-Load assets only when needed:
-
 ```javascript
 async function showLevel(levelNumber) {
-  // Show loading
   loadingText.visible = true;
 
-  // Load level-specific assets
   await assetLoader.loadImages({
     background: `/levels/${levelNumber}/bg.png`,
-    enemies: `/levels/${levelNumber}/enemies.png`,
-    tileset: `/levels/${levelNumber}/tiles.png`
+    enemies: `/levels/${levelNumber}/enemies.png`
   });
 
-  // Hide loading
   loadingText.visible = false;
-
-  // Start level
   startLevel(levelNumber);
 }
 ```
 
-### Asset Management by Scene
-
-Load and unload assets per scene:
-
-```javascript
-class MenuScene extends Scene {
-  async load() {
-    await assetLoader.loadImages({
-      logo: '/menu/logo.png',
-      button: '/menu/button.png',
-      background: '/menu/background.png'
-    });
-  }
-}
-
-class GameScene extends Scene {
-  async load() {
-    await assetLoader.loadImages({
-      player: '/game/player.png',
-      enemies: '/game/enemies.png',
-      tileset: '/game/tileset.png'
-    });
-  }
-}
-
-// Load menu assets
-await menuScene.load();
-game.setScene(menuScene);
-
-// Later, switch to game
-await gameScene.load();
-game.setScene(gameScene);
-```
-
 ### Retry Failed Loads
-
-Handle and retry failed image loads:
 
 ```javascript
 async function loadWithRetry(key, url, maxRetries = 3) {
@@ -301,201 +257,58 @@ async function loadWithRetry(key, url, maxRetries = 3) {
       await assetLoader.loadImage(key, url);
       return;
     } catch (error) {
-      console.log(`Failed to load ${key}, retry ${i + 1}/${maxRetries}`);
-
-      if (i === maxRetries - 1) {
-        throw error;  // Final retry failed
-      }
-
-      // Wait before retry
+      if (i === maxRetries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 }
-
-// Usage
-try {
-  await loadWithRetry('player', '/images/player.png');
-} catch (error) {
-  console.error('Failed to load player image after retries');
-}
 ```
 
-### Loading Screen with Animation
-
-Animated loading indicator:
-
-```javascript
-const loadingScene = new Scene();
-
-const loadingText = new Text({
-  text: 'Loading',
-  x: 200,
-  y: 140,
-  fontSize: 18,
-  color: '#4fc3f7',
-  align: 'center'
-});
-
-const progressBar = new Sprite({
-  x: 200,
-  y: 180,
-  width: 0,  // Start at 0
-  height: 10,
-  color: '#51cf66'
-});
-
-loadingScene.add(loadingText);
-loadingScene.add(progressBar);
-
-game.setScene(loadingScene);
-game.start();
-
-// Load with progress
-const assets = { /* ... */ };
-const total = Object.keys(assets).length;
-let loaded = 0;
-
-const promises = Object.entries(assets).map(async ([key, url]) => {
-  await assetLoader.loadImage(key, url);
-  loaded++;
-
-  const progress = loaded / total;
-  loadingText.text = `Loading ${loaded}/${total}`;
-  progressBar.width = 300 * progress;
-});
-
-await Promise.all(promises);
-
-// Fade out loading screen
-await loadingText.tween({ alpha: 0 }, { duration: 300 });
-await progressBar.tween({ alpha: 0 }, { duration: 300 });
-
-// Show game
-game.setScene(gameScene);
-```
-
-### Asset Groups
-
-Organize assets into logical groups:
-
-```javascript
-const assetGroups = {
-  characters: {
-    player: '/images/player.png',
-    enemy1: '/images/enemy1.png',
-    enemy2: '/images/enemy2.png'
-  },
-
-  environment: {
-    background: '/images/background.png',
-    ground: '/images/ground.png',
-    trees: '/images/trees.png'
-  },
-
-  ui: {
-    button: '/ui/button.png',
-    panel: '/ui/panel.png',
-    heart: '/ui/heart.png'
-  }
-};
-
-// Load specific group
-async function loadGroup(groupName) {
-  const group = assetGroups[groupName];
-  if (group) {
-    await assetLoader.loadImages(group);
-    console.log(`${groupName} loaded`);
-  }
-}
-
-// Load multiple groups
-await loadGroup('characters');
-await loadGroup('environment');
-await loadGroup('ui');
-```
-
-## Error Handling
-
-Handle loading errors gracefully:
+### Error Handling
 
 ```javascript
 try {
   await assetLoader.loadImage('player', '/images/player.png');
 } catch (error) {
-  console.error('Failed to load player image:', error);
-
-  // Use placeholder or default
-  const fallbackSprite = new Sprite({
-    x: 200, y: 150,
-    width: 64, height: 64,
-    color: '#e94560'  // Red placeholder
-  });
-
-  scene.add(fallbackSprite);
+  console.error('Failed to load:', error);
+  // Use fallback sprite with color instead
 }
 ```
 
-## Caching Behavior
+## Caching & Cleanup
 
-The AssetLoader automatically caches loaded images:
-
-```javascript
-// First call: loads from network
-await assetLoader.loadImage('player', '/images/player.png');
-
-// Second call: returns cached image instantly
-await assetLoader.loadImage('player', '/images/player.png');
-
-// Multiple simultaneous calls: only one network request
-const promise1 = assetLoader.loadImage('enemy', '/images/enemy.png');
-const promise2 = assetLoader.loadImage('enemy', '/images/enemy.png');
-const promise3 = assetLoader.loadImage('enemy', '/images/enemy.png');
-
-// All three promises resolve to the same image
-await Promise.all([promise1, promise2, promise3]);
-```
-
-## Clear Cache
-
-Clear cached assets to free memory:
+AssetLoader automatically caches loaded images. Multiple simultaneous calls for the same key result in only one network request. Clear cache to free memory:
 
 ```javascript
 // Clear all assets
 assetLoader.clear();
 
-// Or use a custom loader per level
+// Or use custom loader per level
 const level1Loader = new AssetLoader();
 await level1Loader.loadImages({ /* level 1 assets */ });
-
-// When level ends, clear
-level1Loader.clear();
+level1Loader.clear();  // When done
 ```
 
 ## API Reference
 
-### `loadImage(key, url)`
+### `loadImage(key, url): Promise<HTMLImageElement>`
 
-Load a single image.
+Load a single image with automatic caching.
 
 **Parameters**:
-- `key` (string) - Unique identifier for the image
-- `url` (string) - Path to the image file
-
-**Returns**: Promise<HTMLImageElement>
+- `key` (string) - Unique identifier
+- `url` (string) - Path to image file
 
 ```javascript
 await assetLoader.loadImage('player', '/images/player.png');
 ```
 
-### `loadImages(assets)`
+### `loadImages(assets): Promise<void>`
 
-Load multiple images at once.
+Load multiple images in parallel.
 
 **Parameters**:
-- `assets` (object) - Key-value pairs of identifiers and URLs
-
-**Returns**: Promise<void>
+- `assets` (Record<string, string>) - Key-value pairs
 
 ```javascript
 await assetLoader.loadImages({
@@ -504,52 +317,39 @@ await assetLoader.loadImages({
 });
 ```
 
-### `getImage(key)`
+### `getImage(key): HTMLImageElement | null`
 
-Get a loaded image by key.
-
-**Parameters**:
-- `key` (string) - Image identifier
-
-**Returns**: HTMLImageElement | null
+Get a loaded image.
 
 ```javascript
 const image = assetLoader.getImage('player');
 ```
 
-### `hasImage(key)`
+### `hasImage(key): boolean`
 
-Check if an image is loaded.
-
-**Parameters**:
-- `key` (string) - Image identifier
-
-**Returns**: boolean
+Check if image is loaded.
 
 ```javascript
 if (assetLoader.hasImage('player')) {
-  // Image is loaded
+  // Use it
 }
 ```
 
-### `clear()`
+### `clear(): void`
 
 Clear all loaded assets.
-
-**Returns**: void
 
 ```javascript
 assetLoader.clear();
 ```
 
-## Performance Tips
+## Tips
 
-- **Preload critical assets**: Load essential images before game starts
-- **Lazy load level assets**: Load level-specific assets only when needed
-- **Use asset groups**: Organize assets logically for easier management
-- **Clear unused assets**: Free memory by clearing assets from completed levels
-- **Batch load**: Use `loadImages()` for better parallelization
-- **Cache appropriately**: Let AssetLoader cache, don't load same image twice
+- **Preload critical assets** - Load before game starts
+- **Lazy load levels** - Load level assets when needed
+- **Batch load** - Use `loadImages()` for parallelization
+- **Clear unused assets** - Free memory between levels
+- **Handle errors** - Network can fail, always catch errors
 
 ## Common Mistakes
 
@@ -603,5 +403,5 @@ try {
 ## Next Steps
 
 - [Sprites](/visual/sprites) - Using loaded images with sprites
-- [Sprite Animation](/visual/sprite-animation) - Animating sprite sheets
+- [Sprite Animations](/visual/sprites) - Animating sprite sheets
 - [Scenes](/core/scenes) - Managing asset loading per scene

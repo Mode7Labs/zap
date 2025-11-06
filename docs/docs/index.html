@@ -286,6 +286,22 @@
       margin-bottom: 0;
     }
 
+    .doc-content a {
+      color: #6dd5fa;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .doc-content a:hover {
+      color: #9fe6ff;
+      border-bottom-color: #6dd5fa;
+    }
+
+    .doc-content a:visited {
+      color: #82d8f7;
+    }
+
     /* Demo Controls */
     .demo-controls {
       display: flex;
@@ -387,10 +403,15 @@
         { id: 'animation/particles', label: 'Particles', icon: '💥' },
         { id: 'animation/touch-trail', label: 'Touch Trail', icon: '✨' }
       ],
+      'Physics': [
+        { id: 'physics/physics', label: 'Physics', icon: '⚡' },
+        { id: 'physics/collision-detection', label: 'Collision Detection', icon: '💥' }
+      ],
       'Gestures': [
         { id: 'gestures/tap', label: 'Tap', icon: '👆' },
         { id: 'gestures/drag', label: 'Drag', icon: '👋' },
-        { id: 'gestures/swipe', label: 'Swipe', icon: '👉' }
+        { id: 'gestures/swipe', label: 'Swipe', icon: '👉' },
+        { id: 'gestures/pinch', label: 'Pinch', icon: '🤏' }
       ],
       'UI Components': [
         { id: 'ui/button', label: 'Button', icon: '🔘' },
@@ -409,9 +430,6 @@
         { id: 'utilities/storage', label: 'Storage', icon: '💾' },
         { id: 'utilities/layout', label: 'Layout', icon: '📐' },
         { id: 'utilities/math', label: 'Math', icon: '🔢' }
-      ],
-      'Advanced': [
-        { id: 'advanced/collision-detection', label: 'Collision Detection', icon: '💥' }
       ]
     };
 
@@ -454,6 +472,26 @@
           document.getElementById('demo-title').textContent = result.frontmatter.title || docId;
           document.getElementById('demo-description').textContent = result.frontmatter.description || '';
         }
+
+        // Handle internal link clicks
+        content.querySelectorAll('a').forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && href.startsWith('/')) {
+            // Internal link - prevent default and load doc
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              const docId = href.substring(1); // Remove leading /
+              loadDoc(docId);
+
+              // Update active navigation
+              document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+              const navItem = document.querySelector(`.nav-item[data-doc-id="${docId}"]`);
+              if (navItem) {
+                navItem.classList.add('active');
+              }
+            });
+          }
+        });
       } catch (error) {
         console.error(`Failed to load documentation: ${docId}`, error);
         content.innerHTML = `

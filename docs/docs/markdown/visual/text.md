@@ -21,45 +21,11 @@ const hello = new Text({
   fontSize: 24,
   color: '#ffffff'
 });
+
+scene.add(hello);
 ```
 
-## Simple Text Demo
-
-```codemirror
-import { Game, Scene, Text } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const title = new Text({
-  text: 'Hello Zap!',
-  x: 200,
-  y: 120,
-  fontSize: 32,
-  color: '#4fc3f7',
-  align: 'center'
-});
-
-const subtitle = new Text({
-  text: 'Lightweight 2D game engine',
-  x: 200,
-  y: 160,
-  fontSize: 16,
-  color: '#888',
-  align: 'center'
-});
-
-scene.add(title);
-scene.add(subtitle);
-
-game.setScene(scene);
-game.start();
-```
+> **Note**: Examples assume basic setup with `Game` and `Scene`. See [Getting Started](/getting-started/quickstart) if you're new to Zap.
 
 ## Text Properties
 
@@ -79,6 +45,8 @@ const large = new Text({
 });
 ```
 
+**Default:** `16`
+
 ### Color
 
 Set text color with hex codes:
@@ -92,6 +60,8 @@ const text = new Text({
 // Change color after creation
 text.color = '#2ecc71';  // Green
 ```
+
+**Default:** `'#ffffff'` (white)
 
 ### Font Family
 
@@ -107,54 +77,19 @@ const text = new Text({
 text.fontFamily = 'Courier New, monospace';
 ```
 
+**Default:** `'Arial, sans-serif'`
+
 ## Text Alignment
 
 Control horizontal alignment with the `align` property:
 
-```codemirror
-import { Game, Scene, Text } from '@VERSION';
-
-const game = new Game({
-  width: 400,
-  height: 300,
-  backgroundColor: '#0f3460'
-});
-
-const scene = new Scene();
-
-const leftText = new Text({
-  text: 'Left aligned',
-  x: 50,
-  y: 100,
-  fontSize: 16,
-  color: '#fff',
-  align: 'left'
-});
-
-const centerText = new Text({
-  text: 'Center aligned',
+```javascript
+const text = new Text({
+  text: 'Aligned Text',
   x: 200,
   y: 150,
-  fontSize: 16,
-  color: '#fff',
-  align: 'center'
+  align: 'center'  // 'left', 'center', or 'right'
 });
-
-const rightText = new Text({
-  text: 'Right aligned',
-  x: 350,
-  y: 200,
-  fontSize: 16,
-  color: '#fff',
-  align: 'right'
-});
-
-scene.add(leftText);
-scene.add(centerText);
-scene.add(rightText);
-
-game.setScene(scene);
-game.start();
 ```
 
 Available alignments:
@@ -423,5 +358,5 @@ const instructions = new Text({
 
 - [Shapes](/visual/shapes) - Create colored shapes
 - [Sprites](/visual/sprites) - Display images
-- [Animations](/animation/animations) - Tween text properties
+- [Tweening](/animation/tweening) - Tween text properties
 - [Layout](/utilities/layout) - Position text with layout helpers

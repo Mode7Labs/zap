@@ -63,7 +63,7 @@ const game = new Game({
 When you install Zap, you get:
 
 - **Core** - Game instance, Scene management, Camera control
-- **Entities** - Sprite, Text, AnimatedSprite, NinePatch
+- **Entities** - Sprite (with sprite sheet animations), Text, NinePatch
 - **UI** - Button components
 - **Effects** - Tweening, Particles, Touch trails
 - **Gestures** - Tap, swipe, drag, and long-press recognition

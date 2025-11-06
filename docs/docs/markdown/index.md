@@ -56,9 +56,10 @@ This index provides a complete overview of all Zap documentation. Each section i
 - **[Storage](utilities/storage.md)** - LocalStorage wrapper for saving game data
 - **[Timers](utilities/timers.md)** - Delay and interval utilities with auto-cleanup
 
-## Advanced Features
+## Physics
 
-- **[Collision Detection](advanced/collision-detection.md)** - Automatic AABB collision detection system with events
+- **[Physics](physics/physics.md)** - Built-in velocity, gravity, and friction for realistic movement
+- **[Collision Detection](physics/collision-detection.md)** - Shape-aware collision detection with automatic events
 
 ---
 
@@ -69,7 +70,7 @@ This index provides a complete overview of all Zap documentation. Each section i
 2. Configure your [Game](core/game.md) and [Scenes](core/scenes.md)
 3. Add [Sprites](visual/sprites.md) or [Shapes](visual/shapes.md)
 4. Implement [Gestures](gestures/tap.md) for interaction
-5. Add [Collision Detection](advanced/collision-detection.md) for gameplay
+5. Add [Physics](physics/physics.md) and [Collision Detection](physics/collision-detection.md) for gameplay
 
 ### Adding Visual Polish
 - [Tweening](animation/tweening.md) for smooth animations
@@ -88,7 +89,8 @@ This index provides a complete overview of all Zap documentation. Each section i
 - [Drag](gestures/drag.md) for moving objects
 - [Swipe](gestures/swipe.md) for directional controls
 - [Pinch](gestures/pinch.md) for zooming and scaling
-- [Collision Detection](advanced/collision-detection.md) for gameplay mechanics
+- [Physics](physics/physics.md) for movement and bouncing
+- [Collision Detection](physics/collision-detection.md) for gameplay mechanics
 
 ### Managing Game State
 - [Scenes](core/scenes.md) for different game screens
@@ -133,6 +135,19 @@ sprite.on('tap', () => console.log('Tapped!'));
 **Animate:**
 ```javascript
 sprite.tween({ x: 200, rotation: Math.PI }, { duration: 1000, easing: 'easeInOutQuad' });
+```
+
+**Add physics:**
+```javascript
+sprite.vx = 100;      // Horizontal velocity
+sprite.vy = -200;     // Vertical velocity
+sprite.gravity = 980; // Gravity
+sprite.friction = 0.99;
+```
+
+**Bounce:**
+```javascript
+sprite.bounce(normalX, normalY, 0.8); // Bounce with 80% energy
 ```
 
 **Detect collisions:**
