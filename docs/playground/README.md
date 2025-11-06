@@ -86,7 +86,7 @@ The playground automatically replaces CDN imports with local `/dist/index.mjs` f
 
 ```javascript
 // Written in editor:
-import { Game } from 'https://esm.sh/@mode-7/zap@0.1.5';
+import { Game } from 'https://esm.sh/@mode-7/zap@0.1.6';
 
 // Executed in preview:
 import { Game } from '/dist/index.mjs';
@@ -143,7 +143,7 @@ Edit `examples.js` and add a new entry:
 ```javascript
 export const examples = {
   // ... existing examples
-  myExample: `import { Game, Scene, Sprite } from 'https://esm.sh/@mode-7/zap@0.1.5';
+  myExample: `import { Game, Scene, Sprite } from 'https://esm.sh/@mode-7/zap@0.1.6';
 
 const game = new Game({ ... });
 // Your example code

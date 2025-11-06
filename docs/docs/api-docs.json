@@ -1,6 +1,6 @@
 {
-  "version": "0.1.5",
-  "generated": "2025-11-06T03:44:32.694Z",
+  "version": "0.1.6",
+  "generated": "2025-11-06T23:39:02.200Z",
   "repository": "https://github.com/Mode7Labs/zap",
   "description": "Complete Zap game engine documentation for AI assistants",
   "categories": {
@@ -213,14 +213,14 @@
       {
         "slug": "utilities/storage",
         "title": "Storage",
-        "description": "Save and load game data with localStorage",
+        "description": "Persist game data with localStorage helpers",
         "path": "utilities/storage.md",
         "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/utilities/storage.md"
       },
       {
         "slug": "utilities/timers",
         "title": "Timers",
-        "description": "Delays, intervals, and time-based utilities",
+        "description": "Delays, intervals, and promise-based timing",
         "path": "utilities/timers.md",
         "url": "https://raw.githubusercontent.com/Mode7Labs/zap/main/docs/docs/markdown/utilities/timers.md"
       }

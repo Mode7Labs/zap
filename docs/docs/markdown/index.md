@@ -160,6 +160,6 @@ sprite.on('collisionenter', (event) => console.log('Hit:', event.other));
 ---
 
 ## Version
-This documentation is for **Zap v0.1.5**
+This documentation is for **Zap v0.1.6**
 
 Last updated: 2025-10-19

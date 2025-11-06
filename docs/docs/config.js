@@ -37,7 +37,7 @@ export const config = {
   USE_LOCAL_BUILD: runtime.useLocal,
 
   // Current Zap version for esm.sh imports in interactive demos
-  ZAP_VERSION: '0.1.5',
+  ZAP_VERSION: '0.1.6',
 
   // Local build path (relative to /docs which is the server root on GitHub Pages)
   LOCAL_BUILD_PATH: '../dist/index.mjs',

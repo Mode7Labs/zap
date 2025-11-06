@@ -34,7 +34,7 @@ This JSON file contains:
 **Structure:**
 ```json
 {
-  "version": "0.1.5",
+  "version": "0.1.6",
   "generated": "2025-10-19T07:28:39.699Z",
   "categories": {
     "getting-started": [
@@ -148,6 +148,6 @@ console.log(fullMarkdown);
 
 ## Version
 
-Current documentation version: **0.1.5**
+Current documentation version: **0.1.6**
 
 Last updated: 2025-10-19
