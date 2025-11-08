@@ -167,13 +167,14 @@ export class Scene extends EventEmitter {
       this.sortEntities();
     }
 
+    // LittleJS style: update physics first (which saves oldPos), then check collisions
     for (const entity of this.entities) {
       if (entity.active) {
         entity.update(deltaTime);
       }
     }
 
-    // Check collisions for entities that have collision checking enabled
+    // Check collisions AFTER movement (can use oldPos to detect pre-existing overlaps)
     this.checkCollisions();
 
     this.emit('update', deltaTime);
@@ -185,20 +186,23 @@ export class Scene extends EventEmitter {
   private checkCollisions(): void {
     const collidableEntities = this.entities.filter(e => e.checkCollisions && e.active);
 
+    // Check each pair only once
     for (let i = 0; i < collidableEntities.length; i++) {
-      const entity = collidableEntities[i];
+      for (let j = i + 1; j < collidableEntities.length; j++) {
+        const entity = collidableEntities[i];
+        const other = collidableEntities[j];
 
-      // Check against all other entities
-      for (let j = 0; j < this.entities.length; j++) {
-        const other = this.entities[j];
+        // Double-check both have collisions enabled (defensive)
+        if (!entity.checkCollisions || !other.checkCollisions) continue;
 
-        // Don't check against self
-        if (entity === other) continue;
+        // If both are static, skip (no physics response needed)
+        if (entity.static && other.static) continue;
 
-        // Don't check if other is not active
-        if (!other.active) continue;
-
+        // Check collision between this pair
+        // Both entities get a chance to filter by tags and receive events
+        // Physics response is handled internally based on static flags
         entity.checkCollision(other);
+        other.checkCollision(entity);
       }
     }
   }

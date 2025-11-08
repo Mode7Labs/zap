@@ -333,8 +333,8 @@ describe('Sprite', () => {
       s.update(1);
 
       // Physics from Entity.update should apply
-      expect(s.x).toBe(150); // 100 + 50*1
-      expect(s.y).toBe(130); // 100 + 30*1
+      expect(s.x).toBeCloseTo(150, 10); // 100 + 50*1
+      expect(s.y).toBeCloseTo(130, 10); // 100 + 30*1
     });
 
     it('should update animation frames', () => {

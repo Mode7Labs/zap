@@ -439,63 +439,101 @@ function createDocSummary(markdown) {
 async function discoverDocs(query = '') {
   const topics = [
     // Getting Started
-    { topic: 'installation', category: 'Getting Started', description: 'Install Zap via npm or CDN' },
-    { topic: 'quickstart', category: 'Getting Started', description: 'Quick start guide to build your first Zap game' },
+    { topic: 'installation', category: 'Getting Started', description: 'Install Zap via npm or CDN', keywords: ['setup', 'install', 'npm', 'cdn'] },
+    { topic: 'quickstart', category: 'Getting Started', description: 'Quick start guide to build your first Zap game', keywords: ['start', 'begin', 'tutorial', 'first'] },
 
     // Core
-    { topic: 'architecture', category: 'Core', description: 'Understanding Zap\'s architecture and structure' },
-    { topic: 'game', category: 'Core', description: 'Game configuration and lifecycle management' },
-    { topic: 'scenes', category: 'Core', description: 'Scene management and transitions' },
-    { topic: 'entities', category: 'Core', description: 'Entity system and lifecycle' },
-    { topic: 'camera', category: 'Core', description: 'Camera controls: follow, zoom, shake' },
+    { topic: 'architecture', category: 'Core', description: 'Understanding Zap\'s architecture and structure', keywords: ['structure', 'overview', 'design'] },
+    { topic: 'game', category: 'Core', description: 'Game configuration and lifecycle management', keywords: ['config', 'setup', 'init', 'initialize'] },
+    { topic: 'scenes', category: 'Core', description: 'Scene management and transitions', keywords: ['scene', 'level', 'screen', 'transition'] },
+    { topic: 'entities', category: 'Core', description: 'Entity system and lifecycle', keywords: ['entity', 'object', 'gameobject'] },
+    { topic: 'camera', category: 'Core', description: 'Camera controls: follow, zoom, shake', keywords: ['view', 'follow', 'zoom', 'shake', 'viewport'] },
 
     // Visual
-    { topic: 'shapes', category: 'Visual', description: 'Drawing shapes with Sprite' },
-    { topic: 'sprites', category: 'Visual', description: 'Image sprites and rendering' },
-    { topic: 'sprite-animation', category: 'Visual', description: 'Frame-by-frame sprite animation' },
-    { topic: 'text', category: 'Visual', description: 'Text rendering with custom fonts' },
+    { topic: 'shapes', category: 'Visual', description: 'Drawing shapes with Sprite', keywords: ['rectangle', 'circle', 'draw', 'shape'] },
+    { topic: 'sprites', category: 'Visual', description: 'Image sprites and rendering', keywords: ['image', 'sprite', 'render', 'draw'] },
+    { topic: 'sprite-animation', category: 'Visual', description: 'Frame-by-frame sprite animation', keywords: ['animate', 'frames', 'spritesheet'] },
+    { topic: 'text', category: 'Visual', description: 'Text rendering with custom fonts', keywords: ['label', 'font', 'typography', 'render'] },
 
     // Animation
-    { topic: 'tweening', category: 'Animation', description: 'Tweening and animation system' },
-    { topic: 'particles', category: 'Animation', description: 'Particle effects and emitters' },
-    { topic: 'touch-trail', category: 'Animation', description: 'Touch trail effect' },
+    { topic: 'tweening', category: 'Animation', description: 'Tweening and animation system', keywords: ['tween', 'animate', 'ease', 'interpolate', 'move'] },
+    { topic: 'particles', category: 'Animation', description: 'Particle effects and emitters', keywords: ['particle', 'emitter', 'effect', 'fx'] },
+    { topic: 'touch-trail', category: 'Animation', description: 'Touch trail effect', keywords: ['trail', 'touch', 'finger', 'effect'] },
 
-    // Gestures
-    { topic: 'tap', category: 'Gestures', description: 'Tap/click gesture detection' },
-    { topic: 'drag', category: 'Gestures', description: 'Drag gesture for moving entities' },
-    { topic: 'swipe', category: 'Gestures', description: 'Swipe gesture for directional input' },
+    // Gestures (INPUT!)
+    { topic: 'tap', category: 'Gestures', description: 'Tap/click gesture detection for interactive elements', keywords: ['click', 'touch', 'press', 'input', 'interact', 'button'] },
+    { topic: 'drag', category: 'Gestures', description: 'Drag gesture for moving entities with touch/mouse', keywords: ['move', 'touch', 'mouse', 'input', 'control'] },
+    { topic: 'swipe', category: 'Gestures', description: 'Swipe gesture for directional input', keywords: ['swipe', 'flick', 'direction', 'input'] },
 
     // UI
-    { topic: 'button', category: 'UI', description: 'Interactive button component' },
-    { topic: 'ninepatch', category: 'UI', description: 'Scalable UI panels with NinePatch' },
+    { topic: 'button', category: 'UI', description: 'Interactive button component', keywords: ['click', 'tap', 'interact', 'ui'] },
+    { topic: 'ninepatch', category: 'UI', description: 'Scalable UI panels with NinePatch', keywords: ['panel', 'ui', 'scale', 'dialog'] },
 
     // Audio
-    { topic: 'sound-effects', category: 'Audio', description: 'Playing sound effects' },
-    { topic: 'music', category: 'Audio', description: 'Background music playback' },
-    { topic: 'volume', category: 'Audio', description: 'Volume control and muting' },
+    { topic: 'sound-effects', category: 'Audio', description: 'Playing sound effects', keywords: ['sound', 'sfx', 'audio', 'play'] },
+    { topic: 'music', category: 'Audio', description: 'Background music playback', keywords: ['music', 'bgm', 'audio', 'loop'] },
+    { topic: 'volume', category: 'Audio', description: 'Volume control and muting', keywords: ['volume', 'mute', 'audio'] },
 
     // Utilities
-    { topic: 'easing', category: 'Utilities', description: '31 easing functions for animations' },
-    { topic: 'asset-loader', category: 'Utilities', description: 'Loading and caching images' },
-    { topic: 'fonts', category: 'Utilities', description: 'Loading Google Fonts and custom fonts' },
-    { topic: 'layout', category: 'Utilities', description: 'Grid, circle, row, column layouts' },
-    { topic: 'math', category: 'Utilities', description: 'Math utilities: clamp, lerp, random' },
-    { topic: 'storage', category: 'Utilities', description: 'LocalStorage wrapper' },
-    { topic: 'timers', category: 'Utilities', description: 'Delay and interval utilities' },
+    { topic: 'easing', category: 'Utilities', description: '31 easing functions for animations', keywords: ['ease', 'curve', 'interpolation'] },
+    { topic: 'asset-loader', category: 'Utilities', description: 'Loading and caching images', keywords: ['load', 'preload', 'cache', 'image'] },
+    { topic: 'fonts', category: 'Utilities', description: 'Loading Google Fonts and custom fonts', keywords: ['font', 'typography', 'google', 'text'] },
+    { topic: 'layout', category: 'Utilities', description: 'Grid, circle, row, column layouts', keywords: ['grid', 'layout', 'position', 'align'] },
+    { topic: 'math', category: 'Utilities', description: 'Math utilities: clamp, lerp, random', keywords: ['math', 'random', 'clamp', 'lerp'] },
+    { topic: 'storage', category: 'Utilities', description: 'LocalStorage wrapper', keywords: ['save', 'load', 'persist', 'data'] },
+    { topic: 'timers', category: 'Utilities', description: 'Delay and interval utilities', keywords: ['delay', 'interval', 'timer', 'wait', 'timeout'] },
 
     // Physics
-    { topic: 'physics', category: 'Physics', description: 'Built-in velocity, gravity, friction, and bounce' },
-    { topic: 'collision-detection', category: 'Physics', description: 'Shape-aware collision detection with events' }
+    { topic: 'physics', category: 'Physics', description: 'Built-in velocity, gravity, friction, and bounce', keywords: ['velocity', 'gravity', 'friction', 'bounce', 'movement'] },
+    { topic: 'collision-detection', category: 'Physics', description: 'Shape-aware collision detection with events', keywords: ['collision', 'hit', 'overlap', 'contact'] }
   ];
 
-  // Filter by query if provided
+  // Smart query matching
+  const queryLower = query.toLowerCase();
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2); // Split into words, ignore short words
+
+  // Keyword mapping for common mismatches
+  const keywordMappings = {
+    'keyboard': ['tap', 'drag'],  // No keyboard in Zap - suggest gestures
+    'keydown': ['tap', 'drag'],
+    'keyup': ['tap', 'drag'],
+    'input': ['tap', 'drag', 'swipe'],
+    'on': [],  // Ignore common words
+    'events': [],
+    'sprite': ['sprites', 'shapes'],
+    'zap': []  // Ignore "zap" itself
+  };
+
   const filtered = query
-    ? topics.filter(t =>
-        t.topic.includes(query.toLowerCase()) ||
-        t.description.toLowerCase().includes(query.toLowerCase()) ||
-        t.category.toLowerCase().includes(query.toLowerCase())
-      )
+    ? topics.filter(t => {
+        // Exact topic match
+        if (t.topic.includes(queryLower)) return true;
+
+        // Description match
+        if (t.description.toLowerCase().includes(queryLower)) return true;
+
+        // Category match
+        if (t.category.toLowerCase().includes(queryLower)) return true;
+
+        // Keyword match (direct or mapped)
+        for (const word of queryWords) {
+          // Check direct keyword match
+          if (t.keywords && t.keywords.some(k => k.includes(word))) return true;
+
+          // Check mapped keywords
+          const mappedKeywords = keywordMappings[word] || [];
+          if (mappedKeywords.some(mk => t.topic === mk)) return true;
+        }
+
+        return false;
+      })
     : topics;
+
+  // If no results and query mentions keyboard/input, provide helpful message
+  let hint = '';
+  if (filtered.length === 0 && (queryLower.includes('keyboard') || queryLower.includes('keydown') || queryLower.includes('keyup'))) {
+    hint = 'Note: Zap uses gesture-based input (tap, drag, swipe) rather than keyboard events. For touch/click input, see the Gestures category.';
+  }
 
   // Group by category
   const grouped = filtered.reduce((acc, topic) => {
@@ -508,7 +546,8 @@ async function discoverDocs(query = '') {
 
   return {
     total: filtered.length,
-    topics: grouped
+    topics: grouped,
+    hint: hint
   };
 }
 

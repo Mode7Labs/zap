@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rotation Collision Debug</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: monospace;
+    }
+    #debug {
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #f0f0f0;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <div id="debug"></div>
+  <div id="app"></div>
+
+  <script type="module">
+    import { Entity } from './dist/index.mjs';
+
+    const debug = document.getElementById('debug');
+
+    // Test: Parent rotated 90 degrees
+    const parent = new Entity({ x: 100, y: 100, width: 100, height: 100, rotation: Math.PI / 2 });
+    const child = new Entity({
+      x: 50,
+      y: 0,
+      width: 30,
+      height: 30,
+      checkCollisions: true
+    });
+    parent.addChild(child);
+
+    // Child world position: ~(100, 150)
+    const initialWorldPos = child.getWorldPosition();
+    debug.textContent += `Initial child world position: (${initialWorldPos.x.toFixed(2)}, ${initialWorldPos.y.toFixed(2)})\n`;
+    debug.textContent += `Initial child local position: (${child.x.toFixed(2)}, ${child.y.toFixed(2)})\n`;
+
+    // Create overlapping rect
+    const other = new Entity({
+      x: 110,
+      y: 150,
+      width: 30,
+      height: 30,
+      checkCollisions: true,
+      static: true
+    });
+
+    debug.textContent += `Other position: (${other.x.toFixed(2)}, ${other.y.toFixed(2)})\n`;
+    debug.textContent += `Child.static: ${child.static}, Other.static: ${other.static}\n`;
+
+    // Set oldX/oldY to simulate they were already at this position
+    child.oldX = child.x;
+    child.oldY = child.y;
+    other.oldX = other.x;
+    other.oldY = other.y;
+
+    // Check if they intersect
+    const intersects = child.intersects(other);
+    debug.textContent += `Intersects: ${intersects}\n`;
+
+    if (intersects) {
+      const normal = child.getCollisionNormal(other);
+      debug.textContent += `Collision normal: (${normal.x.toFixed(2)}, ${normal.y.toFixed(2)})\n`;
+    }
+
+    // Trigger collision
+    debug.textContent += `\nTriggering collision...\n`;
+    child.checkCollision(other);
+
+    const newWorldPos = child.getWorldPosition();
+    debug.textContent += `New child world position: (${newWorldPos.x.toFixed(2)}, ${newWorldPos.y.toFixed(2)})\n`;
+    debug.textContent += `New child local position: (${child.x.toFixed(2)}, ${child.y.toFixed(2)})\n`;
+    debug.textContent += `World position changed by: (${(newWorldPos.x - initialWorldPos.x).toFixed(2)}, ${(newWorldPos.y - initialWorldPos.y).toFixed(2)})\n`;
+    debug.textContent += `\nExpected: newWorldPos.x < initialWorldPos.x (${newWorldPos.x} < ${initialWorldPos.x})\n`;
+    debug.textContent += `Test ${newWorldPos.x < initialWorldPos.x ? 'PASS' : 'FAIL'}`;
+  </script>
+</body>
+</html>

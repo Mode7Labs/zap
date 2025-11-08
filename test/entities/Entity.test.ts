@@ -725,8 +725,8 @@ describe('Entity', () => {
 
       e.update(1); // 1 second
 
-      expect(e.x).toBe(150); // 100 + 50
-      expect(e.y).toBe(130); // 100 + 30
+      expect(e.x).toBeCloseTo(150, 10); // 100 + 50
+      expect(e.y).toBeCloseTo(130, 10); // 100 + 30
     });
 
     it('should update position with fractional delta time', () => {
@@ -829,7 +829,8 @@ describe('Entity', () => {
         x: 100,
         y: 100,
         width: 50,
-        height: 50
+        height: 50,
+        checkCollisions: true
       });
 
       scene.add(entity1);
@@ -1019,7 +1020,7 @@ describe('Entity', () => {
         height: 50,
         checkCollisions: true
       });
-      const e2 = new Entity({ x: 110, y: 110, width: 50, height: 50 });
+      const e2 = new Entity({ x: 110, y: 110, width: 50, height: 50, checkCollisions: true });
 
       // Check collision to populate the list
       e1.checkCollision(e2);

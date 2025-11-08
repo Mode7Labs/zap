@@ -335,7 +335,8 @@ describe('Scene', () => {
         x: 100,
         y: 100,
         width: 50,
-        height: 50
+        height: 50,
+        checkCollisions: true
       });
 
       const callback = vi.fn();
@@ -377,7 +378,8 @@ describe('Scene', () => {
         x: 100,
         y: 100,
         width: 50,
-        height: 50
+        height: 50,
+        checkCollisions: true
       });
 
       const callback = vi.fn();

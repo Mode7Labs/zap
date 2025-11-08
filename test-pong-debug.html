@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pong Debug</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+    }
+    #app {
+      flex: 1;
+    }
+    #debug {
+      width: 400px;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .log-entry {
+      margin: 2px 0;
+      padding: 2px;
+    }
+    .log-collision {
+      background: #ff4444;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="debug">
+    <div style="position: sticky; top: 0; background: #1a1a1a; padding-bottom: 5px; border-bottom: 1px solid #333; margin-bottom: 5px;">
+      <strong>Collision Debug Log</strong>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script type="module">
+    import { Game, Scene, Sprite, Text } from './dist/index.mjs';
+
+    const logEl = document.getElementById('log');
+    let logCount = 0;
+
+    function addLog(msg, isCollision = false) {
+      logCount++;
+      const entry = document.createElement('div');
+      entry.className = 'log-entry' + (isCollision ? ' log-collision' : '');
+      entry.textContent = `${logCount}: ${msg}`;
+      logEl.appendChild(entry);
+      logEl.scrollTop = logEl.scrollHeight;
+
+      // Keep only last 200 entries
+      if (logEl.children.length > 200) {
+        logEl.removeChild(logEl.firstChild);
+      }
+    }
+
+    const game = new Game({
+      parent: '#app',
+      backgroundColor: '#0f3460',
+      responsive: true
+    });
+
+    const scene = new Scene();
+
+    // Center line (visual only - no collisions)
+    const centerLine = new Sprite({
+      x: game.width / 2,
+      y: game.height / 2,
+      width: 4,
+      height: game.height,
+      color: '#16213e',
+      static: true,
+      checkCollisions: false,
+      interactive: false
+    });
+    scene.add(centerLine);
+    addLog(`centerLine added: checkCollisions=${centerLine.checkCollisions}`);
+
+    // Paddles
+    const paddleWidth = 14;
+    const paddleHeight = 90;
+
+    const leftPaddle = new Sprite({
+      x: 40,
+      y: game.height / 2,
+      width: paddleWidth,
+      height: paddleHeight,
+      color: '#51cf66',
+      interactive: true,
+      checkCollisions: true,
+      static: true
+    });
+
+    const rightPaddle = new Sprite({
+      x: game.width - 40,
+      y: game.height / 2,
+      width: paddleWidth,
+      height: paddleHeight,
+      color: '#e94560',
+      checkCollisions: true,
+      static: true
+    });
+
+    scene.add(leftPaddle);
+    scene.add(rightPaddle);
+    addLog(`Paddles added: left.checkCollisions=${leftPaddle.checkCollisions}, right.checkCollisions=${rightPaddle.checkCollisions}`);
+
+    // Walls (top/bottom)
+    const wallThickness = 20;
+    const topWall = new Sprite({
+      x: game.width / 2,
+      y: wallThickness / 2,
+      width: game.width,
+      height: wallThickness,
+      color: '#16213e',
+      static: true,
+      checkCollisions: true
+    });
+    const bottomWall = new Sprite({
+      x: game.width / 2,
+      y: game.height - wallThickness / 2,
+      width: game.width,
+      height: wallThickness,
+      color: '#16213e',
+      static: true,
+      checkCollisions: true
+    });
+    scene.add(topWall);
+    scene.add(bottomWall);
+    addLog(`Walls added`);
+
+    // Ball
+    const ball = new Sprite({
+      x: game.width / 2,
+      y: game.height / 2,
+      width: 18,
+      height: 18,
+      radius: 9,
+      color: '#f7f7f7',
+      vx: 0,
+      vy: 0,
+      friction: 1,
+      bounciness: 1,
+      gravity: 0,
+      checkCollisions: true
+    });
+    scene.add(ball);
+    addLog(`Ball added: checkCollisions=${ball.checkCollisions}, x=${ball.x}, y=${ball.y}`);
+    addLog(`Ball starts at centerLine.x=${centerLine.x}, are they overlapping? ${ball.x === centerLine.x}`);
+
+    // Score
+    let leftScore = 0;
+    let rightScore = 0;
+    const scoreText = new Text({
+      text: '0 : 0',
+      x: game.width / 2,
+      y: 32,
+      fontSize: 28,
+      color: '#f7f7f7',
+      align: 'center'
+    });
+    scene.add(scoreText);
+
+    function resetBall(toLeft = false) {
+      ball.x = game.width / 2;
+      ball.y = game.height / 2;
+      ball.vx = 0;
+      ball.vy = 0;
+      addLog(`Ball reset: x=${ball.x}, vx=${ball.vx}`);
+
+      setTimeout(() => {
+        const speed = 340;
+        const angle = (Math.random() * 0.6 - 0.3);
+        const dir = toLeft ? -1 : 1;
+        ball.vx = dir * speed * Math.cos(angle);
+        ball.vy = speed * Math.sin(angle);
+        addLog(`Ball launched: vx=${ball.vx.toFixed(1)}, vy=${ball.vy.toFixed(1)}`);
+      }, 350);
+    }
+
+    resetBall(Math.random() < 0.5);
+
+    let frameCount = 0;
+    let lastBallX = ball.x;
+
+    // Simple AI for right paddle
+    scene.on('update', () => {
+      frameCount++;
+
+      const targetY = ball.y;
+      const lerp = 0.12;
+      rightPaddle.y += (targetY - rightPaddle.y) * lerp;
+
+      const minY = wallThickness + paddleHeight / 2;
+      const maxY = game.height - wallThickness - paddleHeight / 2;
+      rightPaddle.y = Math.max(minY, Math.min(maxY, rightPaddle.y));
+      leftPaddle.y = Math.max(minY, Math.min(maxY, leftPaddle.y));
+
+      // Log when ball crosses center
+      const centerX = game.width / 2;
+      if ((lastBallX < centerX && ball.x >= centerX) || (lastBallX > centerX && ball.x <= centerX)) {
+        addLog(`Frame ${frameCount}: Ball crossing center! x=${ball.x.toFixed(2)}, vx=${ball.vx.toFixed(2)}`);
+      }
+      lastBallX = ball.x;
+
+      if (ball.x < -20) {
+        rightScore += 1;
+        scoreText.text = `${leftScore} : ${rightScore}`;
+        resetBall(false);
+      } else if (ball.x > game.width + 20) {
+        leftScore += 1;
+        scoreText.text = `${leftScore} : ${rightScore}`;
+        resetBall(true);
+      }
+    });
+
+    // Canvas-level drag to control left paddle vertically
+    let dragging = false;
+
+    game.on('dragstart', () => {
+      dragging = true;
+    });
+
+    game.on('drag', (event) => {
+      if (!dragging) return;
+      leftPaddle.y = event.position.y;
+    });
+
+    game.on('dragend', () => {
+      dragging = false;
+    });
+
+    // Tap anywhere (not on entities) to jump paddle to that Y
+    game.on('tap', (event) => {
+      if (event.target) return;
+      leftPaddle.y = event.position.y;
+    });
+
+    // Ensure ball bounces off paddles and walls (engine handles separation)
+    ball.bounciness = 1;
+    ball.checkCollisions = true;
+    centerLine.checkCollisions = false;
+    addLog(`After redundant sets: ball.checkCollisions=${ball.checkCollisions}, centerLine.checkCollisions=${centerLine.checkCollisions}`);
+
+    // Add subtle speed-up and angle change on paddle hits
+    ball.on('collisionenter', (e) => {
+      let entityName = 'unknown';
+      if (e.other === leftPaddle) entityName = 'leftPaddle';
+      else if (e.other === rightPaddle) entityName = 'rightPaddle';
+      else if (e.other === topWall) entityName = 'topWall';
+      else if (e.other === bottomWall) entityName = 'bottomWall';
+      else if (e.other === centerLine) entityName = '!!! centerLine (BUG!) !!!';
+
+      addLog(`COLLISION ENTER: ball hit ${entityName} at x=${ball.x.toFixed(2)}, vx=${ball.vx.toFixed(2)}`, true);
+      addLog(`  other.checkCollisions=${e.other.checkCollisions}`, true);
+
+      if (e.other === leftPaddle || e.other === rightPaddle) {
+        const offset = (ball.y - e.other.y) / (paddleHeight / 2);
+        ball.vy += offset * 140;
+      }
+    });
+
+    scene.add(new Text({
+      text: 'Drag or tap to move the left paddle',
+      x: game.width / 2,
+      y: game.height - 28,
+      fontSize: 14,
+      color: '#aaa',
+      align: 'center'
+    }));
+
+    // Start
+    game.setScene(scene);
+    game.start();
+
+    addLog(`Game started!`);
+  </script>
+</body>
+</html>

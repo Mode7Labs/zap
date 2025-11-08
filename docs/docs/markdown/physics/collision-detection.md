@@ -47,13 +47,14 @@ const enemy = new Sprite({
   width: 50,
   height: 50,
   color: '#e94560',
-  radius: 25
+  radius: 25,
+  checkCollisions: true
 });
 
 scene.add(player);
 scene.add(enemy);
 
-// Enable collision checking
+// Enable collision checking on player
 player.checkCollisions = true;
 
 // Listen for collisions
@@ -255,7 +256,8 @@ for (let i = 0; i < 3; i++) {
     width: 30,
     height: 30,
     color: '#f39c12',
-    radius: 15
+    radius: 15,
+    checkCollisions: true
   });
 
   coin.addTag('coin');
@@ -641,15 +643,80 @@ Static entities:
 
 Zap automatically detects the collision type based on entity properties:
 
-- **Circle collision**: When entity has `radius` property set
-- **Rectangle collision (AABB)**: When entity has `width` and `height` properties
+- **Circle collision**: When entity has `radius` property that matches its dimensions (within 20% tolerance)
+- **Rectangle collision**: When entity has `width` and `height` properties
+- **Rotated rectangle collision**: Automatically uses SAT (Separating Axis Theorem) for accurate rotated rectangle detection
 - **Circle-rectangle**: Automatically handled when checking between different types
 
 This means you get accurate collision detection without any extra configuration!
 
+### Shape Detection
+
+Zap intelligently determines whether to use circle or rectangle collision:
+
+```javascript
+// Circle - radius matches dimensions
+const circle = new Sprite({
+  x: 100,
+  y: 100,
+  width: 40,
+  height: 40,
+  radius: 20  // 20 = 40/2, so this is treated as a circle
+});
+
+// Rounded rectangle - radius is just for visual corners
+const roundedRect = new Sprite({
+  x: 200,
+  y: 100,
+  width: 80,
+  height: 40,
+  radius: 8  // Small radius = visual rounding only, uses rectangle collision
+});
+```
+
+## Advanced Features
+
+### Continuous Collision Detection (CCD)
+
+Zap automatically prevents fast-moving objects from tunneling through walls using binary search-based swept collision detection. This works seamlessly with all collision types including rotated rectangles.
+
+```javascript
+const bullet = new Sprite({
+  x: 50,
+  y: 100,
+  width: 10,
+  height: 10,
+  vx: 2000,  // Very fast - won't tunnel!
+  checkCollisions: true
+});
+```
+
+No configuration needed - CCD is always active for entities with `checkCollisions` enabled.
+
+### Velocity Constraints
+
+Dynamic objects automatically have their velocity adjusted when pushing into static surfaces to prevent tunneling and jittery behavior:
+
+```javascript
+const ball = new Sprite({
+  x: 100,
+  y: 100,
+  width: 30,
+  height: 30,
+  radius: 15,
+  vx: 0,
+  vy: 0,
+  gravity: 980,
+  friction: 0.995,
+  bounciness: 0.9,
+  checkCollisions: true
+});
+```
+
+When the ball hits a wall, its velocity is automatically projected along the collision normal to prevent it from pushing through. Gentle rolling motion (< 50 px/s) is preserved to avoid sticky behavior.
+
 ## Limitations
 
-- **Rotation**: Rotated rectangles still use axis-aligned bounding boxes (AABB)
 - **Automatic physics** only applies to entities with physics properties (vx, vy, gravity, etc.) - for custom collision response, use collision events
 
 ## Tips

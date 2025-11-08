@@ -52,16 +52,59 @@
 
   <!-- Main Container -->
   <div class="container">
-    <!-- Sidebar with Examples -->
+    <!-- Sidebar with Tabs -->
     <div class="sidebar">
-      <h3>Examples</h3>
-      <div class="example" data-example="default">Default</div>
-      <div class="example" data-example="basic">Basic Sprite</div>
-      <div class="example" data-example="circle">Circle</div>
-      <div class="example" data-example="animation">Animation</div>
-      <div class="example" data-example="interactive">Interactive</div>
-      <div class="example" data-example="particles">Particles</div>
-      <div class="example" data-example="game">Mini Game</div>
+      <!-- Tab Headers -->
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="examples">Examples</button>
+        <button class="tab-btn" data-tab="generate">Generate</button>
+      </div>
+
+      <!-- Examples Tab -->
+      <div class="tab-content active" id="examples-tab">
+        <div class="examples-list">
+          <div class="example" data-example="default">Default</div>
+          <div class="example" data-example="basic">Basic Sprite</div>
+          <div class="example" data-example="circle">Circle</div>
+          <div class="example" data-example="animation">Animation</div>
+          <div class="example" data-example="interactive">Interactive</div>
+          <div class="example" data-example="particles">Particles</div>
+          <div class="example" data-example="game">Mini Game</div>
+        </div>
+      </div>
+
+      <!-- Generate Tab -->
+      <div class="tab-content" id="generate-tab">
+        <!-- Chat Messages -->
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-message assistant">
+              <div class="message-content">⚡ Let's build some Zap games! Type what you want in the box below and I'll help you create it.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+          <input
+            type="text"
+            id="ai-prompt"
+            class="chat-input"
+            placeholder="Ask a question or describe what to build..."
+            onkeypress="if(event.key==='Enter' && !event.shiftKey)sendMessage()"
+          />
+          <button class="btn btn-send" id="ai-send-btn" onclick="sendMessage()">
+            <span class="send-icon">↑</span>
+          </button>
+        </div>
+
+        <!-- Chat Footer -->
+        <div class="chat-footer">
+          <button class="btn-text" id="clear-chat-btn" onclick="clearChat()" title="Clear conversation">
+            🗑️ Clear chat
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Main Content -->
@@ -78,27 +121,6 @@
           <div class="panel-header">Live Preview</div>
           <iframe id="preview"></iframe>
         </div>
-      </div>
-
-      <!-- AI Panel -->
-      <div class="ai-panel">
-        <div class="ai-input-container">
-          <input
-            type="text"
-            id="ai-prompt"
-            class="ai-input"
-            placeholder="Describe what you want to build... (e.g., 'add a red circle that bounces')"
-            onkeypress="if(event.key==='Enter')generateCode()"
-          />
-          <button class="btn btn-ai" id="ai-generate-btn" onclick="generateCode()">🤖 Generate</button>
-        </div>
-        <div class="ai-meta">
-          <div id="ai-status" class="ai-status"></div>
-          <button class="btn-text" id="clear-history-btn" onclick="clearAIHistory()" title="Clear conversation history">
-            🗑️ Clear history (<span id="history-count">0</span>)
-          </button>
-        </div>
-        <div id="ai-disclaimer" class="ai-disclaimer">⚡ The AI editor is in early access - please review all generated code carefully!</div>
       </div>
     </div>
   </div>

@@ -74,6 +74,7 @@ export interface EntityOptions extends Partial<Transform> {
   gravity?: number;
   friction?: number;
   bounciness?: number;
+  mass?: number; // Mass for force calculations (default 1, minimum 0.001)
   static?: boolean; // Mark as immovable (for walls, platforms, etc.)
 }
 

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flipper Debug</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a1a2e;
+      display: flex;
+      gap: 20px;
+      font-family: monospace;
+      color: #f7fafc;
+    }
+    #app {
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #debug {
+      width: 300px;
+      background: #2d3748;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    #debug h2 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #4299e1;
+    }
+    .value {
+      color: #48bb78;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="debug">
+    <h2>Flipper Debug</h2>
+    <p>Press A/D to activate flippers</p>
+    <div id="output"></div>
+  </div>
+
+  <script type="module">
+    import { Game, Scene, Sprite } from './dist/index.mjs';
+
+    const game = new Game({
+      parent: '#app',
+      width: 400,
+      height: 600,
+      backgroundColor: '#0f1419'
+    });
+
+    const scene = new Scene();
+    const output = document.getElementById('output');
+
+    // Floor
+    scene.add(new Sprite({
+      x: 200,
+      y: 580,
+      width: 400,
+      height: 40,
+      color: '#2d3748',
+      static: true,
+      checkCollisions: true
+    }));
+
+    // Walls
+    scene.add(new Sprite({
+      x: 10,
+      y: 300,
+      width: 20,
+      height: 600,
+      color: '#2d3748',
+      static: true,
+      checkCollisions: true
+    }));
+
+    scene.add(new Sprite({
+      x: 390,
+      y: 300,
+      width: 20,
+      height: 600,
+      color: '#2d3748',
+      static: true,
+      checkCollisions: true
+    }));
+
+    // Left flipper
+    const leftFlipper = new Sprite({
+      x: 140,
+      y: 530,
+      width: 70,
+      height: 12,
+      color: '#48bb78',
+      rotation: Math.PI / 8,
+      anchorX: 0.2,
+      anchorY: 0.5,
+      static: true,
+      checkCollisions: true,
+      bounciness: 1.2
+    });
+    scene.add(leftFlipper);
+
+    // Right flipper
+    const rightFlipper = new Sprite({
+      x: 260,
+      y: 530,
+      width: 70,
+      height: 12,
+      color: '#4299e1',
+      rotation: -Math.PI / 8,
+      anchorX: 0.8,
+      anchorY: 0.5,
+      static: true,
+      checkCollisions: true,
+      bounciness: 1.2
+    });
+    scene.add(rightFlipper);
+
+    // Ball
+    const ball = new Sprite({
+      x: 200,
+      y: 100,
+      width: 20,
+      height: 20,
+      radius: 10,
+      color: '#ffffff',
+      vx: 0,
+      vy: 0,
+      gravity: 980,
+      mass: 1,
+      friction: 0.995,
+      bounciness: 0.9,
+      checkCollisions: true
+    });
+    scene.add(ball);
+
+    // Keyboard
+    const keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.key.toLowerCase()] = true;
+    });
+    window.addEventListener('keyup', (e) => {
+      keys[e.key.toLowerCase()] = false;
+    });
+
+    // Flipper angles
+    const leftFlipperRestAngle = Math.PI / 8;
+    const leftFlipperActiveAngle = -Math.PI / 6;
+    const rightFlipperRestAngle = -Math.PI / 8;
+    const rightFlipperActiveAngle = Math.PI / 6;
+    const flipperSpeed = 0.15;
+
+    let leftFlipperTargetRotation = leftFlipperRestAngle;
+    let rightFlipperTargetRotation = rightFlipperRestAngle;
+    let frameCount = 0;
+
+    scene.on('update', (dt) => {
+      frameCount++;
+
+      // Left flipper control
+      if (keys['a']) {
+        leftFlipperTargetRotation = leftFlipperActiveAngle;
+      } else {
+        leftFlipperTargetRotation = leftFlipperRestAngle;
+      }
+
+      // Store old rotation
+      const oldLeftRotation = leftFlipper.rotation;
+
+      // Animate left flipper
+      const leftDiff = leftFlipperTargetRotation - leftFlipper.rotation;
+      if (Math.abs(leftDiff) > 0.01) {
+        leftFlipper.rotation += Math.sign(leftDiff) * Math.min(flipperSpeed, Math.abs(leftDiff));
+      } else {
+        leftFlipper.rotation = leftFlipperTargetRotation;
+      }
+
+      // Right flipper control
+      if (keys['d']) {
+        rightFlipperTargetRotation = rightFlipperActiveAngle;
+      } else {
+        rightFlipperTargetRotation = rightFlipperRestAngle;
+      }
+
+      // Store old rotation
+      const oldRightRotation = rightFlipper.rotation;
+
+      // Animate right flipper
+      const rightDiff = rightFlipperTargetRotation - rightFlipper.rotation;
+      if (Math.abs(rightDiff) > 0.01) {
+        rightFlipper.rotation += Math.sign(rightDiff) * Math.min(flipperSpeed, Math.abs(rightDiff));
+      } else {
+        rightFlipper.rotation = rightFlipperTargetRotation;
+      }
+
+      // Log every 10 frames
+      if (frameCount % 10 === 0) {
+        output.innerHTML = `
+          <strong>Frame ${frameCount}</strong><br>
+          <br>
+          <strong>Left Flipper:</strong><br>
+          Before: <span class="value">${(oldLeftRotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          After: <span class="value">${(leftFlipper.rotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          Target: <span class="value">${(leftFlipperTargetRotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          Diff: <span class="value">${(leftDiff * 180 / Math.PI).toFixed(1)}°</span><br>
+          <br>
+          <strong>Right Flipper:</strong><br>
+          Before: <span class="value">${(oldRightRotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          After: <span class="value">${(rightFlipper.rotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          Target: <span class="value">${(rightFlipperTargetRotation * 180 / Math.PI).toFixed(1)}°</span><br>
+          Diff: <span class="value">${(rightDiff * 180 / Math.PI).toFixed(1)}°</span><br>
+          <br>
+          <strong>Ball:</strong><br>
+          Y: <span class="value">${ball.y.toFixed(1)}</span><br>
+          VY: <span class="value">${ball.vy.toFixed(1)}</span><br>
+        `;
+      }
+    });
+
+    game.setScene(scene);
+    game.start();
+  </script>
+</body>
+</html>

@@ -174,6 +174,55 @@ const wall = new Sprite({
 - Static objects don't need physics properties (vx, vy, gravity, etc.)
 - Dynamic objects automatically bounce off static objects
 
+### Mass and Forces
+
+Apply forces to objects using realistic F=ma physics:
+
+```javascript
+const ball = new Sprite({
+  x: 200,
+  y: 200,
+  width: 30,
+  height: 30,
+  radius: 15,
+  vx: 0,
+  vy: 0,
+  mass: 1,  // Default mass (higher = heavier, responds slower to forces)
+  gravity: 980,
+  friction: 0.995,
+  checkCollisions: true
+});
+
+// Apply a force (in pixels/second²)
+ball.applyForce(500, -1000);  // Push right and up
+
+// Forces accumulate during the update loop
+scene.on('update', () => {
+  if (keys['arrowleft']) ball.applyForce(-800, 0);
+  if (keys['arrowright']) ball.applyForce(800, 0);
+  if (keys[' ']) ball.applyForce(0, -5000);  // Jump
+});
+```
+
+**How Forces Work:**
+- Forces are converted to acceleration using `a = F/m`
+- Heavier objects (higher mass) accelerate slower from the same force
+- Forces accumulate during each frame then are automatically cleared
+- Static objects ignore forces
+- Default mass is `1`, minimum is `0.001`
+
+**Force vs Direct Velocity:**
+- Use `applyForce()` for realistic physics interactions (thrusters, impulses, collisions)
+- Use direct `vx/vy` assignment for instant speed changes (teleports, speed boosts)
+
+```javascript
+// Force - gradual acceleration based on mass
+ball.applyForce(0, -5000);  // Realistic jump
+
+// Direct velocity - instant speed change
+ball.vy = -500;  // Instant jump
+```
+
 ## Bouncing
 
 Use the `bounce()` method to reflect velocity off surfaces:
@@ -457,10 +506,13 @@ ball.on('collide', ({ other }) => {
 ### Properties
 
 ```typescript
-entity.vx: number | undefined      // Horizontal velocity (pixels/sec)
-entity.vy: number | undefined      // Vertical velocity (pixels/sec)
-entity.gravity: number | undefined // Gravity acceleration (pixels/sec²)
-entity.friction: number | undefined // Friction multiplier (0-1)
+entity.vx: number | undefined         // Horizontal velocity (pixels/sec)
+entity.vy: number | undefined         // Vertical velocity (pixels/sec)
+entity.gravity: number | undefined    // Gravity acceleration (pixels/sec²)
+entity.friction: number | undefined   // Friction multiplier (0-1)
+entity.mass: number | undefined       // Mass for force calculations (default: 1, min: 0.001)
+entity.bounciness: number | undefined // Energy retention when bouncing (0-1)
+entity.static: boolean | undefined    // Immovable object flag (default: false)
 ```
 
 ### Methods
@@ -471,6 +523,12 @@ entity.bounce(
   normalX: number,     // X component of surface normal
   normalY: number,     // Y component of surface normal
   restitution: number  // Bounciness (0-1), defaults to 0.8
+): void
+
+// Apply a force (F=ma physics)
+entity.applyForce(
+  fx: number,  // Horizontal force (pixels/sec²)
+  fy: number   // Vertical force (pixels/sec²)
 ): void
 ```
 

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zap Physics Test Suite</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a1a2e;
+      font-family: monospace;
+      color: #fff;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 100px);
+    }
+    #app {
+      border: 2px solid #444;
+      flex-shrink: 0;
+    }
+    #controls {
+      width: 400px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .test-section {
+      background: #2a2a3e;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+    .test-section h3 {
+      margin: 0 0 10px 0;
+      color: #4299e1;
+    }
+    button {
+      background: #4299e1;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      margin: 5px 5px 5px 0;
+      cursor: pointer;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    button:hover {
+      background: #3182ce;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      background: #1a1a2e;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+    .pass { color: #48bb78; }
+    .fail { color: #f56565; }
+    .info { color: #63b3ed; }
+    label {
+      display: block;
+      margin: 8px 0;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .value {
+      color: #48bb78;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zap Physics & Collision Test Suite</h1>
+  <div class="container">
+    <div id="app"></div>
+    <div id="controls">
+
+      <div class="test-section">
+        <h3>Test 1: Basic Gravity</h3>
+        <p>A ball should fall down at consistent acceleration</p>
+        <button onclick="runTest1()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test1-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 2: Wall Collision</h3>
+        <p>Ball should bounce off walls without sticking</p>
+        <button onclick="runTest2()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test2-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 3: Bounciness</h3>
+        <p>Ball with bounciness=1 should bounce forever</p>
+        <label>
+          Bounciness: <span id="bounce-val" class="value">1.0</span>
+          <input type="range" min="0" max="1" step="0.1" value="1.0" id="bounce-slider">
+        </label>
+        <button onclick="runTest3()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test3-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 4: Friction</h3>
+        <p>Ball rolling should slow down with friction < 1</p>
+        <label>
+          Friction: <span id="friction-val" class="value">0.98</span>
+          <input type="range" min="0.9" max="1" step="0.01" value="0.98" id="friction-slider">
+        </label>
+        <button onclick="runTest4()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test4-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 5: Static Objects</h3>
+        <p>Static objects should never move when hit</p>
+        <button onclick="runTest5()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test5-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 6: Rotation</h3>
+        <p>Rotating sprite should spin smoothly</p>
+        <button onclick="runTest6()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test6-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 7: Rotated Collision</h3>
+        <p>Ball should collide correctly with rotated walls</p>
+        <p style="color: #48bb78; font-size: 11px;">✓ FIXED: Now uses center-to-center normal for rotated rectangles</p>
+        <button onclick="runTest7()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test7-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 8: Anchor Point</h3>
+        <p>Sprite should rotate around custom anchor point</p>
+        <button onclick="runTest8()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test8-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 9: CheckCollisions Flag</h3>
+        <p>Ball should pass through objects with checkCollisions=false</p>
+        <button onclick="runTest9()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test9-status" class="status"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>Test 10: Multiple Collisions</h3>
+        <p>Ball should handle multiple simultaneous collisions</p>
+        <button onclick="runTest10()">Run Test</button>
+        <button onclick="clearScene()">Clear</button>
+        <div id="test10-status" class="status"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { Game, Scene, Sprite, Text } from './dist/index.mjs';
+
+    const game = new Game({
+      parent: '#app',
+      width: 600,
+      height: 600,
+      backgroundColor: '#0f1419'
+    });
+
+    let scene = new Scene();
+    game.setScene(scene);
+    game.start();
+
+    // Make globally accessible
+    window.game = game;
+    window.scene = scene;
+    window.Sprite = Sprite;
+    window.Text = Text;
+    window.Scene = Scene;
+
+    // Utility functions
+    window.clearScene = function() {
+      scene = new Scene();
+      game.setScene(scene);
+      document.querySelectorAll('.status').forEach(el => el.innerHTML = '');
+    };
+
+    window.log = function(testId, message, type = 'info') {
+      const el = document.getElementById(`test${testId}-status`);
+      const className = type;
+      el.innerHTML += `<div class="${className}">${message}</div>`;
+    };
+
+    // Update slider values
+    document.getElementById('bounce-slider').oninput = function() {
+      document.getElementById('bounce-val').textContent = this.value;
+    };
+    document.getElementById('friction-slider').oninput = function() {
+      document.getElementById('friction-val').textContent = this.value;
+    };
+
+    // TEST 1: Basic Gravity
+    window.runTest1 = function() {
+      clearScene();
+      log(1, 'Creating ball with gravity=500...', 'info');
+
+      const ball = new Sprite({
+        x: 300,
+        y: 100,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        gravity: 500,
+        vx: 0,
+        vy: 0,
+        checkCollisions: false
+      });
+      scene.add(ball);
+
+      let lastY = ball.y;
+      let lastVy = 0;
+      let frameCount = 0;
+
+      const checkInterval = setInterval(() => {
+        frameCount++;
+        const deltaY = ball.y - lastY;
+        const deltaVy = ball.vy - lastVy;
+
+        if (frameCount === 1) {
+          log(1, `Frame 1: y=${ball.y.toFixed(1)}, vy=${ball.vy.toFixed(1)}`, 'info');
+        } else if (frameCount === 30) {
+          log(1, `Frame 30: y=${ball.y.toFixed(1)}, vy=${ball.vy.toFixed(1)}`, 'info');
+          if (ball.vy > lastVy) {
+            log(1, '✓ Velocity increasing (gravity working)', 'pass');
+          } else {
+            log(1, '✗ Velocity not increasing!', 'fail');
+          }
+        } else if (frameCount === 60) {
+          log(1, `Frame 60: y=${ball.y.toFixed(1)}, vy=${ball.vy.toFixed(1)}`, 'info');
+          if (ball.y > 100) {
+            log(1, '✓ Ball falling down', 'pass');
+          } else {
+            log(1, '✗ Ball not falling!', 'fail');
+          }
+          clearInterval(checkInterval);
+        }
+
+        lastY = ball.y;
+        lastVy = ball.vy;
+      }, 16);
+    };
+
+    // TEST 2: Wall Collision
+    window.runTest2 = function() {
+      clearScene();
+      log(2, 'Creating ball and walls...', 'info');
+
+      // Floor
+      const floor = new Sprite({
+        x: 300,
+        y: 580,
+        width: 600,
+        height: 20,
+        color: '#2d3748',
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(floor);
+
+      // Ball
+      const ball = new Sprite({
+        x: 300,
+        y: 100,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        gravity: 800,
+        vx: 0,
+        vy: 0,
+        bounciness: 0.8,
+        checkCollisions: true
+      });
+      scene.add(ball);
+
+      let bounceCount = 0;
+      let lastY = ball.y;
+      let stuckFrames = 0;
+
+      ball.on('collisionenter', (e) => {
+        if (e.other === floor) {
+          bounceCount++;
+          log(2, `Bounce ${bounceCount}: y=${ball.y.toFixed(1)}, vy=${ball.vy.toFixed(1)}`, 'info');
+        }
+      });
+
+      const checkInterval = setInterval(() => {
+        // Check if stuck
+        if (Math.abs(ball.y - lastY) < 0.1) {
+          stuckFrames++;
+          if (stuckFrames > 60) {
+            log(2, '✗ Ball appears stuck!', 'fail');
+            clearInterval(checkInterval);
+          }
+        } else {
+          stuckFrames = 0;
+        }
+
+        if (bounceCount >= 3) {
+          log(2, '✓ Ball bouncing correctly', 'pass');
+          clearInterval(checkInterval);
+        }
+
+        lastY = ball.y;
+      }, 16);
+    };
+
+    // TEST 3: Bounciness
+    window.runTest3 = function() {
+      clearScene();
+      const bounciness = parseFloat(document.getElementById('bounce-slider').value);
+      log(3, `Testing bounciness=${bounciness}...`, 'info');
+
+      const floor = new Sprite({
+        x: 300,
+        y: 580,
+        width: 600,
+        height: 20,
+        color: '#2d3748',
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(floor);
+
+      const ball = new Sprite({
+        x: 300,
+        y: 100,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        gravity: 800,
+        vx: 0,
+        vy: 0,
+        bounciness: bounciness,
+        checkCollisions: true
+      });
+      scene.add(ball);
+
+      let peakHeights = [];
+      let lastVy = 0;
+      let lowestY = 100;
+
+      // Track peak height after each bounce
+      scene.on('update', () => {
+        // Detect when ball reaches peak (vy changes from negative to positive)
+        if (lastVy < 0 && ball.vy >= 0 && ball.y < 500) {
+          peakHeights.push(ball.y);
+
+          if (peakHeights.length >= 3) {
+            const h1 = 580 - peakHeights[0];
+            const h2 = 580 - peakHeights[1];
+            const ratio = h2 / h1;
+            const expectedRatio = bounciness * bounciness; // Energy loss is squared
+
+            log(3, `Peak 1: y=${peakHeights[0].toFixed(1)} (height=${h1.toFixed(1)})`, 'info');
+            log(3, `Peak 2: y=${peakHeights[1].toFixed(1)} (height=${h2.toFixed(1)})`, 'info');
+            log(3, `Height ratio: ${ratio.toFixed(2)} (expected ~${expectedRatio.toFixed(2)})`, 'info');
+
+            if (Math.abs(ratio - expectedRatio) < 0.15) {
+              log(3, '✓ Bounciness working correctly', 'pass');
+            } else {
+              log(3, `✗ Bounciness not accurate (off by ${Math.abs(ratio - expectedRatio).toFixed(2)})`, 'fail');
+            }
+
+            // Stop tracking after test completes
+            scene.off('update');
+          }
+        }
+        lastVy = ball.vy;
+        lowestY = Math.max(lowestY, ball.y);
+      });
+    };
+
+    // TEST 4: Friction
+    window.runTest4 = function() {
+      clearScene();
+      const friction = parseFloat(document.getElementById('friction-slider').value);
+      log(4, `Testing friction=${friction}...`, 'info');
+
+      const ball = new Sprite({
+        x: 100,
+        y: 300,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        vx: 300,
+        vy: 0,
+        gravity: 0,
+        friction: friction,
+        checkCollisions: false
+      });
+      scene.add(ball);
+
+      const initialVx = ball.vx;
+
+      setTimeout(() => {
+        const currentVx = ball.vx;
+        log(4, `Initial vx: ${initialVx.toFixed(1)}`, 'info');
+        log(4, `Current vx: ${currentVx.toFixed(1)}`, 'info');
+
+        if (currentVx < initialVx) {
+          log(4, '✓ Friction slowing down ball', 'pass');
+        } else {
+          log(4, '✗ Friction not working!', 'fail');
+        }
+      }, 2000);
+    };
+
+    // TEST 5: Static Objects
+    window.runTest5 = function() {
+      clearScene();
+      log(5, 'Creating static wall and moving ball...', 'info');
+
+      const wall = new Sprite({
+        x: 300,
+        y: 300,
+        width: 50,
+        height: 100,
+        color: '#e53e3e',
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(wall);
+
+      const initialX = wall.x;
+      const initialY = wall.y;
+
+      const ball = new Sprite({
+        x: 100,
+        y: 300,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        vx: 400,
+        vy: 0,
+        gravity: 0,
+        checkCollisions: true,
+        bounciness: 1
+      });
+      scene.add(ball);
+
+      ball.on('collisionenter', (e) => {
+        if (e.other === wall) {
+          setTimeout(() => {
+            if (Math.abs(wall.x - initialX) < 0.01 && Math.abs(wall.y - initialY) < 0.01) {
+              log(5, '✓ Static wall did not move', 'pass');
+            } else {
+              log(5, `✗ Static wall moved! (${wall.x}, ${wall.y})`, 'fail');
+            }
+          }, 100);
+        }
+      });
+    };
+
+    // TEST 6: Rotation
+    window.runTest6 = function() {
+      clearScene();
+      log(6, 'Creating rotating sprite...', 'info');
+
+      const sprite = new Sprite({
+        x: 300,
+        y: 300,
+        width: 100,
+        height: 50,
+        color: '#48bb78',
+        rotation: 0
+      });
+      scene.add(sprite);
+
+      let rotations = 0;
+      scene.on('update', () => {
+        sprite.rotation += 0.05;
+        if (sprite.rotation > Math.PI * 2) {
+          rotations++;
+          sprite.rotation = 0;
+          if (rotations === 1) {
+            log(6, '✓ Sprite rotated 360 degrees', 'pass');
+          }
+        }
+      });
+    };
+
+    // TEST 7: Rotated Collision
+    window.runTest7 = function() {
+      clearScene();
+      log(7, 'Creating rotated wall at 45 degrees...', 'info');
+
+      const wall = new Sprite({
+        x: 300,
+        y: 400,
+        width: 200,
+        height: 20,
+        color: '#e53e3e',
+        rotation: Math.PI / 4,
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(wall);
+
+      const ball = new Sprite({
+        x: 200,
+        y: 200,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        vx: 100,
+        vy: 200,
+        gravity: 500,
+        checkCollisions: true,
+        bounciness: 0.8
+      });
+      scene.add(ball);
+
+      ball.on('collisionenter', (e) => {
+        if (e.other === wall) {
+          log(7, `Collision with rotated wall at y=${ball.y.toFixed(1)}`, 'info');
+          log(7, '✓ Collision detected with rotated object', 'pass');
+        }
+      });
+
+      setTimeout(() => {
+        log(7, 'Waiting for collision...', 'info');
+      }, 100);
+    };
+
+    // TEST 8: Anchor Point
+    window.runTest8 = function() {
+      clearScene();
+      log(8, 'Creating sprite with left anchor (0.0, 0.5)...', 'info');
+
+      const sprite = new Sprite({
+        x: 300,
+        y: 300,
+        width: 100,
+        height: 50,
+        color: '#9f7aea',
+        rotation: 0,
+        anchorX: 0.0,
+        anchorY: 0.5
+      });
+      scene.add(sprite);
+
+      // Draw a marker at the anchor point
+      const marker = new Sprite({
+        x: 300,
+        y: 300,
+        width: 10,
+        height: 10,
+        radius: 5,
+        color: '#f56565'
+      });
+      scene.add(marker);
+
+      log(8, 'Red dot shows rotation point (should be left edge)', 'info');
+
+      scene.on('update', () => {
+        sprite.rotation += 0.03;
+      });
+
+      setTimeout(() => {
+        log(8, 'If sprite rotates around red dot, anchor works!', 'pass');
+      }, 1000);
+    };
+
+    // TEST 9: CheckCollisions Flag
+    window.runTest9 = function() {
+      clearScene();
+      log(9, 'Ball should pass through wall (checkCollisions=false)...', 'info');
+
+      const wall = new Sprite({
+        x: 300,
+        y: 300,
+        width: 50,
+        height: 200,
+        color: '#718096',
+        static: true,
+        checkCollisions: false
+      });
+      scene.add(wall);
+
+      const ball = new Sprite({
+        x: 100,
+        y: 300,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        vx: 200,
+        vy: 0,
+        gravity: 0,
+        checkCollisions: true
+      });
+      scene.add(ball);
+
+      let collided = false;
+      ball.on('collisionenter', (e) => {
+        if (e.other === wall) {
+          collided = true;
+          log(9, '✗ Ball collided with non-collidable wall!', 'fail');
+        }
+      });
+
+      setTimeout(() => {
+        if (!collided && ball.x > 300) {
+          log(9, '✓ Ball passed through wall', 'pass');
+        }
+      }, 2000);
+    };
+
+    // TEST 10: Multiple Collisions
+    window.runTest10 = function() {
+      clearScene();
+      log(10, 'Ball in corner with two walls...', 'info');
+
+      const wallLeft = new Sprite({
+        x: 200,
+        y: 300,
+        width: 20,
+        height: 200,
+        color: '#2d3748',
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(wallLeft);
+
+      const wallBottom = new Sprite({
+        x: 300,
+        y: 380,
+        width: 200,
+        height: 20,
+        color: '#2d3748',
+        static: true,
+        checkCollisions: true
+      });
+      scene.add(wallBottom);
+
+      const ball = new Sprite({
+        x: 250,
+        y: 340,
+        width: 30,
+        height: 30,
+        radius: 15,
+        color: '#4299e1',
+        vx: -100,
+        vy: 100,
+        gravity: 500,
+        checkCollisions: true,
+        bounciness: 0.8
+      });
+      scene.add(ball);
+
+      let collisionCount = 0;
+      ball.on('collisionenter', () => {
+        collisionCount++;
+      });
+
+      setTimeout(() => {
+        if (collisionCount >= 2) {
+          log(10, `✓ Multiple collisions handled (${collisionCount} total)`, 'pass');
+        } else {
+          log(10, `✗ Only ${collisionCount} collision(s) detected`, 'fail');
+        }
+      }, 3000);
+    };
+
+  </script>
+</body>
+</html>

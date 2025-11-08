@@ -3,12 +3,12 @@
 import { examples } from './examples.js';
 import { Editor } from './editor.js';
 import { Settings } from './settings.js';
-import { AIAssistant } from './ai-iterative.js';
+import { AIUnified } from './ai-unified.js';
 
 // Initialize modules
 const editor = new Editor();
 const settings = new Settings();
-const ai = new AIAssistant(settings, editor);
+const ai = new AIUnified(settings, editor);
 
 // Listen for runtime errors from preview iframe
 window.addEventListener('message', (event) => {
@@ -17,31 +17,36 @@ window.addEventListener('message', (event) => {
   }
 });
 
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(tabBtn => {
+  tabBtn.addEventListener('click', () => {
+    const tabName = tabBtn.dataset.tab;
+
+    // Update active tab button
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    tabBtn.classList.add('active');
+
+    // Update active tab content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+  });
+});
+
 // Global functions for HTML event handlers
 window.openSettings = () => settings.open();
 window.closeSettings = () => settings.close();
 window.saveSettings = () => settings.save();
-window.generateCode = () => {
+window.sendMessage = () => {
   const prompt = document.getElementById('ai-prompt').value.trim();
-  ai.generateCode(prompt);
-};
-window.clearAIHistory = () => {
-  if (confirm('Clear conversation history? The AI will lose context of previous requests.')) {
-    ai.clearHistory();
-    window.updateHistoryCount();
+  if (prompt) {
+    ai.sendMessage(prompt);
   }
 };
-
-// Update history count display
-window.updateHistoryCount = function() {
-  const count = ai.conversationHistory.length;
-  document.getElementById('history-count').textContent = count;
-  const btn = document.getElementById('clear-history-btn');
-  btn.disabled = count === 0;
-}
-
-// Initial update
-window.updateHistoryCount();
+window.clearChat = () => {
+  if (confirm('Clear chat history? This will start a new conversation.')) {
+    ai.clearHistory();
+  }
+};
 
 // Example selection
 document.querySelectorAll('.example').forEach(exampleElement => {

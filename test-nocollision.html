@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>No Collision Test</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: monospace; }
+    #app { width: 800px; height: 600px; border: 2px solid #333; }
+    #log { margin-top: 20px; white-space: pre-wrap; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { Game, Scene, Sprite } from './dist/index.mjs';
+
+    const log = document.getElementById('log');
+    function addLog(msg) {
+      log.textContent += msg + '\n';
+    }
+
+    const game = new Game({
+      parent: '#app',
+      backgroundColor: '#0f3460',
+      width: 800,
+      height: 600
+    });
+
+    const scene = new Scene();
+
+    // Center line with NO collision
+    const centerLine = new Sprite({
+      x: 400,
+      y: 300,
+      width: 4,
+      height: 600,
+      color: '#16213e',
+      static: true,
+      checkCollisions: false,  // NO COLLISION
+      interactive: false
+    });
+    scene.add(centerLine);
+    addLog(`centerLine.checkCollisions = ${centerLine.checkCollisions}`);
+
+    // Ball that crosses the center
+    const ball = new Sprite({
+      x: 200,
+      y: 300,
+      width: 20,
+      height: 20,
+      radius: 10,
+      color: '#f7f7f7',
+      vx: 100,
+      vy: 0,
+      friction: 1,
+      bounciness: 1,
+      gravity: 0,
+      checkCollisions: true
+    });
+    scene.add(ball);
+    addLog(`ball.checkCollisions = ${ball.checkCollisions}`);
+
+    let collisionCount = 0;
+
+    ball.on('collisionenter', (e) => {
+      collisionCount++;
+      addLog(`\n!!! COLLISION ${collisionCount}: ball hit ${e.other === centerLine ? 'centerLine' : 'unknown'}`);
+      addLog(`    ball.x=${ball.x.toFixed(2)}, centerLine.x=${centerLine.x}`);
+      addLog(`    centerLine.checkCollisions = ${centerLine.checkCollisions}`);
+    });
+
+    let frameCount = 0;
+    scene.on('update', () => {
+      frameCount++;
+      if (frameCount === 1) {
+        addLog(`\nFrame 1: Ball starting...`);
+      }
+      if (frameCount === 100) {
+        addLog(`\nFrame 100: Ball should have crossed centerLine without collision`);
+        addLog(`  ball.x = ${ball.x.toFixed(2)}`);
+        addLog(`  Collision count: ${collisionCount}`);
+        if (collisionCount === 0) {
+          addLog(`  ✓ SUCCESS: No collisions detected!`);
+        } else {
+          addLog(`  ✗ FAIL: Ball collided with centerLine!`);
+        }
+      }
+    });
+
+    game.setScene(scene);
+    game.start();
+
+    addLog('\nWatching ball pass through centerLine...');
+  </script>
+</body>
+</html>

@@ -408,8 +408,8 @@ describe('Button', () => {
       button.update(1);
 
       // Should have moved (physics from Entity)
-      expect(button.x).toBe(50);
-      expect(button.y).toBe(50);
+      expect(button.x).toBeCloseTo(50, 10);
+      expect(button.y).toBeCloseTo(50, 10);
     });
 
     it('should handle zero delta time', () => {

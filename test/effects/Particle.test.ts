@@ -443,8 +443,8 @@ describe('ParticleEmitter', () => {
       emitter.update(1);
 
       // Emitter should move
-      expect(emitter.x).toBe(50);
-      expect(emitter.y).toBe(50);
+      expect(emitter.x).toBeCloseTo(50, 10);
+      expect(emitter.y).toBeCloseTo(50, 10);
     });
 
     it('should accumulate time for emission', () => {

@@ -62,6 +62,39 @@ sprite.on('longpress', (event) => {
 
 Long press fires after holding for **500 milliseconds** without moving more than 10 pixels.
 
+### Hold and Release Pattern
+
+For "charge up" mechanics (like launching a pinball), combine `dragstart` and `dragend`:
+
+```javascript
+let charging = false;
+let chargePower = 0;
+
+// Start charging when press begins
+plunger.on('dragstart', () => {
+  charging = true;
+});
+
+// Release when press ends
+plunger.on('dragend', () => {
+  if (charging) {
+    // Launch with accumulated power
+    ball.vy = -600 * chargePower;
+    charging = false;
+    chargePower = 0;
+  }
+});
+
+// Accumulate charge while holding
+scene.on('update', (dt) => {
+  if (charging) {
+    chargePower = Math.min(1, chargePower + dt * 0.5);
+  }
+});
+```
+
+> **Note**: There is no `tapend` event. Use `dragstart` / `dragend` for press/release detection, or `longpress` for hold-only detection.
+
 ## Tap Event
 
 The tap event provides information about the tap:
@@ -143,6 +176,132 @@ const game = new Game({
 game.on('tap', (event) => {
   console.log('Canvas tapped at:', event.position);
   // Create ripple effect, spawn particles, etc.
+});
+```
+
+## Mixing Entity and Canvas Taps
+
+> **⚠️ Important**: When you tap an interactive entity, **BOTH** events fire:
+> 1. `entity.on('tap')` fires on the tapped entity
+> 2. `game.on('tap')` fires on the canvas (with the entity as `event.target`)
+>
+> This can lead to handling the same tap twice if you're not careful!
+
+### Recommended Patterns
+
+**For UI elements** (buttons, menus, cards) - Use entity-level taps:
+
+```javascript
+// ✅ GOOD - Entity-level for specific objects
+const button = new Sprite({
+  x: 200, y: 150,
+  width: 100, height: 40,
+  color: '#4fc3f7',
+  interactive: true
+});
+
+button.on('tap', () => {
+  console.log('Button clicked!');
+  // Only this handler fires
+});
+
+scene.add(button);
+```
+
+**For game controls** (left/right input, keyboard-like controls) - Use canvas-level taps:
+
+```javascript
+// ✅ GOOD - Canvas-level for game input
+game.on('tap', (event) => {
+  // Check which side of screen was tapped
+  if (event.position.x < game.width / 2) {
+    player.moveLeft();
+  } else {
+    player.moveRight();
+  }
+});
+```
+
+### Avoiding Double-Handling
+
+**❌ Don't mix both** for the same area - both handlers will fire:
+
+```javascript
+// ❌ BAD - Both handlers fire for the same tap!
+button.on('tap', () => {
+  console.log('Button tapped');     // Fires first
+});
+
+game.on('tap', (event) => {
+  console.log('Canvas tapped');     // Also fires!
+  // This runs even when tapping the button
+});
+```
+
+**✅ If you need both**, check for a target to avoid double-handling:
+
+```javascript
+// ✅ GOOD - Check if tap was on an entity
+game.on('tap', (event) => {
+  if (event.target) {
+    // Tap was on an interactive entity
+    // Entity handler will handle it, so skip here
+    return;
+  }
+
+  // Tap was on empty canvas
+  console.log('Empty space tapped');
+  createRippleEffect(event.position);
+});
+```
+
+**✅ Alternative**: Use entity taps for specific actions, canvas taps for general input:
+
+```javascript
+// UI buttons - use entity taps
+pauseButton.on('tap', () => game.pause());
+resumeButton.on('tap', () => game.resume());
+
+// Game input - use canvas taps (check target to avoid buttons)
+game.on('tap', (event) => {
+  // Skip if user tapped a button
+  if (event.target) return;
+
+  // Otherwise, handle gameplay tap
+  spawnParticlesAt(event.position);
+});
+```
+
+### Real-World Example: Pinball Flippers
+
+```javascript
+// ✅ GOOD - Use canvas-level for keyboard-like controls
+const game = new Game({ width: 800, height: 600 });
+
+game.on('tap', (event) => {
+  // Check which side was tapped
+  const x = event.position.x;
+
+  if (x < game.width * 0.5) {
+    // Left side - activate left flipper
+    leftFlipper.activate();
+  } else {
+    // Right side - activate right flipper
+    rightFlipper.activate();
+  }
+});
+
+// ❌ BAD - Don't create invisible tap zones over the whole screen
+// This conflicts with canvas-level taps and creates confusion
+const leftZone = new Sprite({
+  x: 200, y: 300,
+  width: 400, height: 600,
+  color: '#00000000',  // Invisible
+  interactive: true
+});
+
+leftZone.on('tap', () => {
+  leftFlipper.activate();  // This AND game.on('tap') both fire!
 });
 ```
 
@@ -347,6 +506,24 @@ sprite.on('tap', () => console.log('Second handler'));
 sprite.off('tap');
 sprite.on('tap', () => console.log('Only handler'));
 ```
+
+## Available Gesture Events
+
+Here's the complete list of gesture events in Zap:
+
+| Event | Fires On | Use Case |
+|-------|----------|----------|
+| `tap` | Quick tap/click | Buttons, UI interactions |
+| `longpress` | Hold for 500ms | Context menus, alt actions |
+| `drag` | Pointer moves while down | Moving objects |
+| `dragstart` | Pointer down | Start interaction |
+| `dragend` | Pointer up | End interaction, release |
+| `swipe` | Fast directional movement | Page navigation, throw |
+| `pointerover` | Pointer enters entity | Hover effects |
+| `pointerout` | Pointer leaves entity | Remove hover |
+| `pinch` | Two-finger pinch | Zoom, scale |
+
+> **Common mistake**: There is no `tapend`, `tapup`, `pointerup`, or `mouseup` event. Use `dragend` for pointer release detection.
 
 ## Next Steps
 
