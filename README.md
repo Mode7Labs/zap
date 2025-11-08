@@ -405,7 +405,14 @@ Layout.randomItem(array);
 
 ## Collision Detection
 
-Automatic AABB collision system with events - perfect for games!
+Advanced collision system with automatic event-driven detection and physics response.
+
+**Features:**
+- **Continuous Collision Detection (CCD)** - Prevents tunneling at high speeds
+- **SAT for rotated rectangles** - Accurate collision for rotated objects
+- **Symmetric detection** - Both entities receive events regardless of order
+- **Circle and rectangle collision** - Automatic shape detection
+- **Physics integration** - Automatic separation and bounce response
 
 ```typescript
 // Enable collision detection on an entity
@@ -414,6 +421,15 @@ const player = new Sprite({
   width: 50, height: 50,
   checkCollisions: true, // Enable automatic collision checking
   collisionTags: ['enemy', 'coin'], // Only collide with these tags
+  bounciness: 0.8, // Optional: bounce energy retention
+  static: false, // Dynamic object (can move)
+});
+
+const wall = new Sprite({
+  x: 400, y: 300,
+  width: 20, height: 600,
+  checkCollisions: true,
+  static: true, // Static object (immovable)
 });
 
 // Listen for collision events
@@ -443,6 +459,37 @@ if (entity1.intersects(entity2)) {
 entity.distanceTo(other);     // Distance between entities
 entity.getBounds();           // { left, right, top, bottom }
 entity.containsPoint(x, y);   // Check if point is inside
+```
+
+## Physics
+
+Realistic physics simulation with velocity, gravity, friction, and force application.
+
+```typescript
+const ball = new Sprite({
+  x: 200, y: 100,
+  width: 30, height: 30,
+  radius: 15,
+  vx: 100,        // Horizontal velocity (pixels/sec)
+  vy: 0,          // Vertical velocity (pixels/sec)
+  gravity: 980,   // Gravity acceleration (pixels/sec²)
+  friction: 0.99, // Velocity decay (0-1)
+  bounciness: 0.8,// Bounce energy retention
+  mass: 1,        // Mass for force calculations
+  checkCollisions: true,
+});
+
+// Apply forces (F=ma physics)
+ball.applyForce(500, -1000); // Push right and up
+
+scene.on('update', () => {
+  // Continuous force application
+  if (keys['arrowleft']) ball.applyForce(-800, 0);
+  if (keys['arrowright']) ball.applyForce(800, 0);
+});
+
+// Bounce off surfaces
+ball.bounce(normalX, normalY, restitution);
 ```
 
 ## Asset Loading
