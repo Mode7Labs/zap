@@ -471,6 +471,37 @@ describe('Scene', () => {
 
       expect(callback).toHaveBeenCalledTimes(2);
     });
+
+    it('should preserve background sprite when clearing', () => {
+      // Create scene with background image
+      const sceneWithBg = new Scene({
+        backgroundImage: 'test.png'
+      });
+
+      // Mock game to trigger background sprite creation
+      const mockGame = {
+        width: 800,
+        height: 600
+      } as any;
+
+      sceneWithBg.setGame(mockGame);
+
+      // Add some regular entities
+      const entity1 = new Entity({ x: 100, y: 100 });
+      const entity2 = new Entity({ x: 200, y: 200 });
+      sceneWithBg.add(entity1);
+      sceneWithBg.add(entity2);
+
+      // Should have 3 entities: background + 2 regular
+      expect(sceneWithBg.getEntities().length).toBe(3);
+
+      // Clear the scene
+      sceneWithBg.clear();
+
+      // Should only have background sprite left
+      expect(sceneWithBg.getEntities().length).toBe(1);
+      expect(sceneWithBg.getEntities()[0].zIndex).toBe(-1000);
+    });
   });
 
   describe('Lifecycle Events', () => {

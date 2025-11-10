@@ -105,6 +105,8 @@ export interface TextOptions extends EntityOptions {
   color?: string;
   align?: 'left' | 'center' | 'right';
   baseline?: 'top' | 'middle' | 'bottom' | 'alphabetic';
+  maxWidth?: number; // Maximum width for text wrapping
+  lineHeight?: number; // Line height multiplier (default: 1.2)
 }
 
 export type EasingFunction = (t: number) => number;

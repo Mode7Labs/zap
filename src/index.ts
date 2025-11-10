@@ -38,6 +38,7 @@ export * as MathZ from "./utils/math";
 export { loadGoogleFont, loadGoogleFonts, loadCustomFont } from "./utils/fonts";
 export { delay, interval, wait } from "./utils/timer";
 export { Storage } from "./utils/storage";
+export { wrapText, measureText, truncateText, calculateTextHeight } from "./utils/text";
 
 // Types
 export type {

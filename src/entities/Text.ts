@@ -1,5 +1,6 @@
 import type { TextOptions } from '../types';
 import { Entity } from './Entity';
+import { wrapText, calculateTextHeight } from '../utils/text';
 
 /**
  * Text entity for rendering text
@@ -11,10 +12,14 @@ export class Text extends Entity {
   public color: string;
   public align: 'left' | 'center' | 'right';
   public baseline: 'top' | 'middle' | 'bottom' | 'alphabetic';
+  public maxWidth?: number;
+  public lineHeight: number;
 
   // Font string cache
   private cachedFontString: string = '';
   private dimensionsCached: boolean = false;
+  private wrappedLines: string[] = [];
+  private wrappedLinesCached: boolean = false;
 
   constructor(options: TextOptions) {
     super(options);
@@ -25,6 +30,8 @@ export class Text extends Entity {
     this.color = options.color ?? '#ffffff';
     this.align = options.align ?? 'center';
     this.baseline = options.baseline ?? 'middle';
+    this.maxWidth = options.maxWidth;
+    this.lineHeight = options.lineHeight ?? 1.2;
 
     // Initialize cache
     this.cachedFontString = `${this._fontSize}px ${this._fontFamily}`;
@@ -41,6 +48,7 @@ export class Text extends Entity {
     if (this._fontSize !== value) {
       this._fontSize = value;
       this.cachedFontString = `${this._fontSize}px ${this._fontFamily}`;
+      this.wrappedLinesCached = false; // Invalidate wrap cache
     }
   }
 
@@ -55,6 +63,7 @@ export class Text extends Entity {
     if (this._fontFamily !== value) {
       this._fontFamily = value;
       this.cachedFontString = `${this._fontSize}px ${this._fontFamily}`;
+      this.wrappedLinesCached = false; // Invalidate wrap cache
     }
   }
 
@@ -81,23 +90,55 @@ export class Text extends Entity {
   }
 
   /**
+   * Get wrapped lines (cached)
+   */
+  private getWrappedLines(ctx: CanvasRenderingContext2D): string[] {
+    if (!this.wrappedLinesCached && this.maxWidth) {
+      this.wrappedLines = wrapText(this.text, this.maxWidth, ctx, this.getFontString());
+      this.wrappedLinesCached = true;
+    }
+    return this.wrappedLines;
+  }
+
+  /**
    * Draw the text
    */
   protected draw(ctx: CanvasRenderingContext2D): void {
-    // Auto-measure dimensions on first render for hit detection (if not explicitly set)
-    if (!this.dimensionsCached && (this.width === 0 || this.height === 0)) {
-      const measured = this.measureText(ctx);
-      if (this.width === 0) this.width = measured.width;
-      if (this.height === 0) this.height = measured.height;
-      this.dimensionsCached = true;
-    }
-
     ctx.font = this.getFontString();
     ctx.fillStyle = this.color;
     ctx.textAlign = this.align;
     ctx.textBaseline = this.baseline;
 
-    // Text alignment handles positioning, no offset needed
-    ctx.fillText(this.text, 0, 0);
+    // Handle wrapped text
+    if (this.maxWidth) {
+      const lines = this.getWrappedLines(ctx);
+      const lineSpacing = this.fontSize * this.lineHeight;
+
+      // Auto-measure dimensions for wrapped text
+      if (!this.dimensionsCached && (this.width === 0 || this.height === 0)) {
+        if (this.width === 0) this.width = this.maxWidth;
+        if (this.height === 0) this.height = calculateTextHeight(lines, this.fontSize, this.lineHeight);
+        this.dimensionsCached = true;
+      }
+
+      // Draw each line
+      const startY = this.baseline === 'top' ? 0 : -(lines.length - 1) * lineSpacing / 2;
+
+      for (let i = 0; i < lines.length; i++) {
+        const y = startY + i * lineSpacing;
+        ctx.fillText(lines[i], 0, y);
+      }
+    } else {
+      // Single line text
+      // Auto-measure dimensions on first render for hit detection (if not explicitly set)
+      if (!this.dimensionsCached && (this.width === 0 || this.height === 0)) {
+        const measured = this.measureText(ctx);
+        if (this.width === 0) this.width = measured.width;
+        if (this.height === 0) this.height = measured.height;
+        this.dimensionsCached = true;
+      }
+
+      ctx.fillText(this.text, 0, 0);
+    }
   }
 }

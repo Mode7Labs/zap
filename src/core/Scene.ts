@@ -239,11 +239,14 @@ export class Scene extends EventEmitter {
   }
 
   /**
-   * Clear all entities
+   * Clear all entities (preserves background)
    */
   clear(): void {
     for (const entity of [...this.entities]) {
-      this.remove(entity);
+      // Preserve the background sprite
+      if (entity !== this.backgroundSprite) {
+        this.remove(entity);
+      }
     }
   }
 

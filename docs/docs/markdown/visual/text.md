@@ -354,6 +354,141 @@ const instructions = new Text({
 });
 ```
 
+## Text Wrapping
+
+The Text component supports automatic text wrapping when you specify a `maxWidth`. Long text will automatically split into multiple lines to fit within the width.
+
+### Basic Wrapping
+
+```codemirror
+import { Game, Scene, Text, Sprite } from '@VERSION';
+
+const game = new Game({
+  width: 600,
+  height: 400,
+  backgroundColor: '#0f3460'
+});
+
+const scene = new Scene();
+
+// Background for wrapped text
+const background = new Sprite({
+  x: 300,
+  y: 150,
+  width: 320,
+  height: 180,
+  color: '#2d3748',
+  radius: 8
+});
+scene.add(background);
+
+// Text with automatic wrapping
+const wrappedText = new Text({
+  text: 'This is a long piece of text that will automatically wrap to fit within the specified maximum width. The Text component handles line breaks seamlessly!',
+  x: 160,
+  y: 80,
+  maxWidth: 280,      // Enable wrapping at 280px
+  lineHeight: 1.4,    // Line spacing (default: 1.2)
+  fontSize: 16,
+  color: '#e8f4f8',
+  align: 'left',
+  baseline: 'top'
+});
+scene.add(wrappedText);
+
+game.setScene(scene);
+game.start();
+```
+
+### Wrapping Properties
+
+**`maxWidth`** - Maximum width before wrapping (in pixels)
+- When set, text automatically wraps to fit
+- Lines are cached for performance
+- Width is set to `maxWidth` automatically
+
+**`lineHeight`** - Line spacing multiplier (default: `1.2`)
+- Controls spacing between lines
+- `1.0` = tight spacing
+- `1.5` = generous spacing
+- `2.0` = double spacing
+
+### Center-Aligned Wrapping
+
+```javascript
+const dialog = new Text({
+  text: 'This dialog text is center-aligned and wraps automatically. Perfect for notifications and messages!',
+  x: 300,
+  y: 150,
+  maxWidth: 250,
+  lineHeight: 1.5,
+  fontSize: 14,
+  color: '#4fc3f7',
+  align: 'center',  // Each line is centered
+  baseline: 'top'
+});
+```
+
+### Paragraph Breaks
+
+Newline characters (`\n`) are preserved when wrapping:
+
+```javascript
+const article = new Text({
+  text: 'First paragraph of text here.\n\nSecond paragraph starts on a new line.',
+  x: 50,
+  y: 100,
+  maxWidth: 300,
+  lineHeight: 1.4,
+  fontSize: 14,
+  align: 'left',
+  baseline: 'top'
+});
+```
+
+## Text Utilities
+
+For advanced text handling, Zap includes standalone utilities:
+
+```javascript
+import { wrapText, truncateText, measureText, calculateTextHeight } from '@mode-7/zap';
+
+// Create a canvas context for measurement
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
+// Wrap text manually
+const lines = wrapText(
+  'Long text here...',
+  250,              // max width
+  ctx,
+  '16px Arial'      // font
+);
+// Returns: ['Long text', 'here...']
+
+// Truncate with ellipsis
+const truncated = truncateText(
+  'Very long text that needs truncating',
+  150,              // max width
+  ctx,
+  '16px Arial',
+  '...'            // optional ellipsis (default: '...')
+);
+// Returns: 'Very long text...'
+
+// Measure text dimensions
+const { width, height } = measureText('Hello', ctx, '24px Arial');
+
+// Calculate height of wrapped lines
+const totalHeight = calculateTextHeight(lines, 16, 1.4);
+```
+
+These utilities are useful for:
+- Custom text rendering
+- UI layout calculations
+- Text preprocessing
+- Dynamic text sizing
+
 ## Next Steps
 
 - [Shapes](/visual/shapes) - Create colored shapes
